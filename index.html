@@ -276,7 +276,7 @@
       border-radius:999px; border:1px solid var(--border); color:var(--muted)
     }
     .winMark.good{border-color: rgba(52,211,153,.45); color: rgba(52,211,153,.95)}
-    .winMark.bad{border-color: rgba(251,113,133,.45); color: rgba(251,113,133,.95)}
+    .winMark.bad{border-color: rgba(251,113,133,.55); color: rgba(251,113,133,.95)}
     .winMark.warn{border-color: rgba(251,191,36,.45); color: rgba(251,191,36,.95)}
     @media (max-width:760px){
       .gridRow{grid-template-columns: 1fr; gap:8px}
@@ -294,7 +294,7 @@
     .tot .k{font-size:12px; color:var(--muted)}
     .tot .v{font-size:18px; font-weight:900; margin-top:4px}
 
-    /* Dialogs */
+    /* Confirm dialog */
     dialog{
       border:none; border-radius:18px; padding:0;
       background: rgba(18,26,51,.98);
@@ -304,16 +304,44 @@
     }
     dialog::backdrop{background: rgba(0,0,0,.55)}
     .modal-hd{padding:14px 14px 0}
-    .modal-bd{padding:14px}
     .modal-ft{padding:0 14px 14px; display:flex; justify-content:flex-end; gap:10px}
 
-    /* Upload gate */
     .gateBox{
       border:1px solid var(--border);
       border-radius:16px;
       padding:14px;
       background: rgba(255,255,255,.02);
       max-width: 520px;
+    }
+
+    /* Finals bracket cards */
+    .bracket{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+    .stage{
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: rgba(255,255,255,.02);
+      padding:12px;
+    }
+    .stage .topline{
+      display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;
+    }
+    .stage .st{
+      display:flex; flex-direction:column; gap:6px;
+    }
+    .stage .st b{font-size:13px}
+    .stage .match{
+      margin-top:6px;
+      font-size:14px;
+      font-weight:800;
+    }
+    .stage .subline{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
     }
 
     @media print{
@@ -330,7 +358,6 @@
     <div class="wrap top">
       <div class="brand">
         <div class="crestWrap" aria-hidden="true" title="Berwick Tennis Club • Est. 1948">
-          <!-- Simple premium crest (navy/white theme implied via dark UI + white lines) -->
           <svg viewBox="0 0 200 200" width="38" height="38" aria-hidden="true">
             <circle cx="100" cy="100" r="92" fill="none" stroke="#ffffff" stroke-width="6"/>
             <circle cx="100" cy="100" r="78" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
@@ -352,6 +379,7 @@
         <button class="tab" data-view="fixtures">Fixtures</button>
         <button class="tab" data-view="results" id="tab-results">Upload Scores 🔒</button>
         <button class="tab" data-view="ladder">Ladder</button>
+        <button class="tab" data-view="finals">Finals</button>
         <button class="tab" data-view="players">Player Stats</button>
         <button class="tab" data-view="rules">Rules</button>
       </nav>
@@ -372,7 +400,7 @@
           </div>
           <div class="bd">
             <div id="nextRoundMatches"></div>
-            <div class="foot">This version stores results on this device only (localStorage). If you want a shared site later, we can connect it to Google Sheets securely.</div>
+            <div class="foot">Results are stored on this device (localStorage). If you want a shared site later, we can connect this securely to Google Sheets.</div>
           </div>
         </div>
 
@@ -432,7 +460,7 @@
       </div>
     </section>
 
-    <!-- UPLOAD SCORES (CODE GATED) -->
+    <!-- UPLOAD SCORES -->
     <section id="view-results" class="view" hidden>
       <div class="card">
         <div class="hd">
@@ -453,7 +481,7 @@
           <div id="gateArea" class="gateBox">
             <div class="badge">Protected</div>
             <div class="title" style="margin-top:10px">Enter access code</div>
-            <div class="muted" style="margin-top:6px">This keeps score entry limited to captains / organisers.</div>
+            <div class="muted" style="margin-top:6px">This limits score entry to captains / organisers.</div>
             <div class="row" style="margin-top:12px">
               <input id="gateCode" type="password" placeholder="Code" autocomplete="off" style="min-width:220px" />
               <button class="btn primary" id="btnUnlock">Unlock</button>
@@ -484,6 +512,45 @@
         <div class="bd">
           <div id="ladderTable"></div>
           <div class="foot">Scoring: 1 point per set won + 2 bonus points if you win the night (no bonus on a tie).</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINALS -->
+    <section id="view-finals" class="view" hidden>
+      <div class="grid two">
+        <div class="card">
+          <div class="hd">
+            <div class="row" style="justify-content:space-between">
+              <div>
+                <h2 class="title">Finals</h2>
+                <div class="muted">Auto-updates as standings change (Top 4)</div>
+              </div>
+              <span class="pill"><span class="dot"></span><span id="finalsStatusPill">Live standings</span></span>
+            </div>
+          </div>
+          <div class="bd">
+            <div id="finalsBracket"></div>
+            <div class="foot">
+              This shows the <b>current</b> Top 4 based on the ladder. After Round 14, it effectively becomes the final bracket.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="hd"><h2 class="title">Finals Dates</h2><div class="muted">Edit the dates in the CONFIG section in this file</div></div>
+          <div class="bd">
+            <table>
+              <thead><tr><th>Stage</th><th>Date</th><th>Match</th></tr></thead>
+              <tbody>
+                <tr><td>Elimination</td><td id="dateElim">TBA</td><td>3rd vs 4th</td></tr>
+                <tr><td>Qualifying</td><td id="dateQual">TBA</td><td>1st vs 2nd</td></tr>
+                <tr><td>Preliminary</td><td id="datePrelim">TBA</td><td>Loser (1v2) vs Winner (3v4)</td></tr>
+                <tr><td>Grand Final</td><td id="dateGF">TBA</td><td>Winner (1v2) vs Winner (Prelim)</td></tr>
+              </tbody>
+            </table>
+            <div class="foot">The matchups use the latest ladder positions automatically.</div>
+          </div>
         </div>
       </div>
     </section>
@@ -542,19 +609,24 @@
   </dialog>
 
   <script>
-  /* ============================================================
-     CONFIG: Upload access code (client-side gate)
-     ============================================================
-     This gate stops casual edits. For true security, enforce server-side
-     when you connect to Google Sheets.
-  */
+  // ============================================================
+  // CONFIG
+  // ============================================================
   const SCORE_ENTRY_CODE = "BTC1818";
   const SEASON_KEY = "btc_thursday_autumn_2026_v1";
   const UNLOCK_KEY = SEASON_KEY + "_upload_unlocked";
 
-  /* ============================================================
-     DATA: Teams + Fixtures
-     ============================================================ */
+  // Finals dates (edit these)
+  const FINALS_DATES = {
+    elimination: "TBA",
+    qualifying: "TBA",
+    preliminary: "TBA",
+    grandFinal: "TBA"
+  };
+
+  // ============================================================
+  // DATA: Teams + Fixtures
+  // ============================================================
   const teams = {
     1:{ name:"Team 1", players:["Cooper Khalil","Simran Chawla","David Sutton","Chris Maniatakis"] },
     2:{ name:"Team 2", players:["Enrique Lopez","Craig Kitner","Josh Bury","Varun Sridhara"] },
@@ -582,7 +654,7 @@
     { r:14, date:"28-May-26", matches:[[7,5],[1,4],[2,3],[6,null]] },
   ];
 
-  // Pairing order matches your sheet
+  // Pairing order matches your score sheet
   const pairings = [
     { key:"12", label:"1 + 2", a:[1,2], b:[1,2] },
     { key:"34", label:"3 + 4", a:[3,4], b:[3,4] },
@@ -592,9 +664,9 @@
     { key:"23", label:"2 + 3", a:[2,3], b:[2,3] },
   ];
 
-  /* ============================================================
-     STORAGE
-     ============================================================ */
+  // ============================================================
+  // STORAGE
+  // ============================================================
   let RESULTS = loadResults_();
 
   function loadResults_(){
@@ -609,9 +681,9 @@
     localStorage.setItem(SEASON_KEY, JSON.stringify(RESULTS));
   }
 
-  /* ============================================================
-     HELPERS
-     ============================================================ */
+  // ============================================================
+  // HELPERS
+  // ============================================================
   const $ = (sel)=>document.querySelector(sel);
   const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
 
@@ -648,7 +720,6 @@
   }
 
   function attachTeamChipHandlers_(){
-    // close any open mobile popovers when clicking outside
     document.addEventListener("click", (e)=>{
       const chip = e.target.closest?.(".team-chip");
       if (!chip){
@@ -674,9 +745,9 @@
     });
   }
 
-  /* ============================================================
-     UPLOAD CODE GATE
-     ============================================================ */
+  // ============================================================
+  // UPLOAD CODE GATE
+  // ============================================================
   function isUnlocked_(){ return localStorage.getItem(UNLOCK_KEY) === "1"; }
   function setUnlocked_(val){
     if (val) localStorage.setItem(UNLOCK_KEY, "1");
@@ -700,7 +771,6 @@
       $("#gateCode").value = "";
       renderGate_();
       toast_("Unlocked ✔");
-      // prepare selectors
       populateRoundSelect();
       $("#roundSelect").value = "1";
       populateMatchSelect();
@@ -716,9 +786,9 @@
     toast_("Locked 🔒");
   }
 
-  /* ============================================================
-     SCORING
-     ============================================================ */
+  // ============================================================
+  // SCORING
+  // ============================================================
   function calcNightPoints(aSets, bSets){
     aSets = Number(aSets)||0;
     bSets = Number(bSets)||0;
@@ -733,32 +803,21 @@
     aGames = Number(aGames);
     bGames = Number(bGames);
     if (!Number.isFinite(aGames) || !Number.isFinite(bGames)) return {winner: null, status:"empty"};
-    // standard: first to 6
     if (aGames === 6 && bGames !== 6) return {winner:"A", status:"ok"};
     if (bGames === 6 && aGames !== 6) return {winner:"B", status:"ok"};
-    // allow unusual but still decide
     if ((aGames >= 6 || bGames >= 6) && aGames !== bGames){
       return {winner: (aGames > bGames ? "A":"B"), status:"warn"};
     }
     return {winner: null, status:"warn"};
   }
 
-  /* ============================================================
-     LADDER + PLAYER STATS
-     ============================================================ */
+  // ============================================================
+  // LADDER + PLAYER STATS
+  // ============================================================
   function buildLadder(){
     const base = {};
     Object.keys(teams).forEach(id=>{
-      base[id] = {
-        teamId:Number(id),
-        played:0,
-        points:0,
-        setsWon:0,
-        setsLost:0,
-        nightsWon:0,
-        nightsLost:0,
-        nightsTied:0,
-      };
+      base[id] = { teamId:Number(id), played:0, points:0, setsWon:0, setsLost:0, nightsWon:0, nightsLost:0, nightsTied:0 };
     });
 
     for (const m of Object.values(RESULTS)){
@@ -793,9 +852,7 @@
   function buildPlayerStats(){
     const stats = new Map();
     for (const [tid, t] of Object.entries(teams)){
-      t.players.forEach(p=>{
-        stats.set(p, { name:p, teamId:Number(tid), setsWon:0, setsPlayed:0 });
-      });
+      t.players.forEach(p=>stats.set(p, { name:p, teamId:Number(tid), setsWon:0, setsPlayed:0 }));
     }
 
     for (const m of Object.values(RESULTS)){
@@ -812,22 +869,12 @@
         const aPlayers = pr.a.map(n=>teamA.players[n-1]);
         const bPlayers = pr.b.map(n=>teamB.players[n-1]);
 
-        for (const p of aPlayers){
-          const s = stats.get(p); s.setsPlayed++;
-          if (w === "A") s.setsWon++;
-        }
-        for (const p of bPlayers){
-          const s = stats.get(p); s.setsPlayed++;
-          if (w === "B") s.setsWon++;
-        }
+        for (const p of aPlayers){ const s = stats.get(p); s.setsPlayed++; if (w === "A") s.setsWon++; }
+        for (const p of bPlayers){ const s = stats.get(p); s.setsPlayed++; if (w === "B") s.setsWon++; }
       }
     }
 
-    const rows = Array.from(stats.values()).map(s=>{
-      const winPct = s.setsPlayed ? (s.setsWon / s.setsPlayed) : 0;
-      return {...s, winPct};
-    });
-
+    const rows = Array.from(stats.values()).map(s=>({ ...s, winPct: s.setsPlayed ? (s.setsWon / s.setsPlayed) : 0 }));
     rows.sort((a,b)=>{
       const aQ = a.setsPlayed >= 6, bQ = b.setsPlayed >= 6;
       if (aQ !== bQ) return (bQ ? 1 : -1);
@@ -836,13 +883,100 @@
       const sp = b.setsPlayed - a.setsPlayed; if (sp) return sp;
       return a.name.localeCompare(b.name);
     });
-
     return rows;
   }
 
-  /* ============================================================
-     RENDER: HOME
-     ============================================================ */
+  // ============================================================
+  // FINALS (AUTO-UPDATES WITH CURRENT TOP 4)
+  // ============================================================
+  function renderFinals(){
+    // dates table
+    $("#dateElim").textContent = FINALS_DATES.elimination || "TBA";
+    $("#dateQual").textContent = FINALS_DATES.qualifying || "TBA";
+    $("#datePrelim").textContent = FINALS_DATES.preliminary || "TBA";
+    $("#dateGF").textContent = FINALS_DATES.grandFinal || "TBA";
+
+    const ladder = buildLadder();
+    const top4 = ladder.slice(0,4).map(x=>x.teamId);
+    const t1 = top4[0] ?? null;
+    const t2 = top4[1] ?? null;
+    const t3 = top4[2] ?? null;
+    const t4 = top4[3] ?? null;
+
+    // Live vs locked indicator (locked after all Round 14 matches are recorded)
+    const round14 = rounds.find(r=>r.r===14);
+    let round14Complete = true;
+    if (round14){
+      for (let i=0;i<round14.matches.length;i++){
+        const [a,b] = round14.matches[i];
+        if (b == null) continue;
+        const id = matchId(14, i);
+        if (!RESULTS[id]) { round14Complete = false; break; }
+      }
+    } else {
+      round14Complete = false;
+    }
+    $("#finalsStatusPill").textContent = round14Complete ? "Locked (after Round 14)" : "Live standings";
+
+    $("#finalsBracket").innerHTML = `
+      <div class="bracket">
+        <div class="stage">
+          <div class="topline">
+            <div class="st">
+              <b>Qualifying (1st vs 2nd)</b>
+              <div class="subline">${escapeHtml_(FINALS_DATES.qualifying || "TBA")}</div>
+              <div class="match">${t1 ? teamChipHTML(t1) : `<span class="badge warn">TBA</span>`} <span class="muted">vs</span> ${t2 ? teamChipHTML(t2) : `<span class="badge warn">TBA</span>`}</div>
+              <div class="subline">Winner goes straight to Grand Final • Loser goes to Preliminary</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage">
+          <div class="topline">
+            <div class="st">
+              <b>Elimination (3rd vs 4th)</b>
+              <div class="subline">${escapeHtml_(FINALS_DATES.elimination || "TBA")}</div>
+              <div class="match">${t3 ? teamChipHTML(t3) : `<span class="badge warn">TBA</span>`} <span class="muted">vs</span> ${t4 ? teamChipHTML(t4) : `<span class="badge warn">TBA</span>`}</div>
+              <div class="subline">Loser eliminated • Winner advances to Preliminary</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage">
+          <div class="topline">
+            <div class="st">
+              <b>Preliminary</b>
+              <div class="subline">${escapeHtml_(FINALS_DATES.preliminary || "TBA")}</div>
+              <div class="match"><span class="muted">Loser (1v2)</span> <span class="muted">vs</span> <span class="muted">Winner (3v4)</span></div>
+              <div class="subline">Winner advances to Grand Final</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage">
+          <div class="topline">
+            <div class="st">
+              <b>Grand Final</b>
+              <div class="subline">${escapeHtml_(FINALS_DATES.grandFinal || "TBA")}</div>
+              <div class="match"><span class="muted">Winner (1v2)</span> <span class="muted">vs</span> <span class="muted">Winner (Prelim)</span></div>
+              <div class="subline">Champions of Autumn 2026</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="muted" style="font-size:12px">
+          Current Top 4: 
+          ${top4.map((tid,idx)=>`<span class="badge">${idx+1}</span> ${teamChipHTML(tid)}`).join(" • ")}
+        </div>
+      </div>
+    `;
+
+    attachTeamChipHandlers_();
+  }
+
+  // ============================================================
+  // RENDER: HOME
+  // ============================================================
   function getNextRound(){
     for (const round of rounds){
       let allDone = true;
@@ -920,9 +1054,9 @@
     }
   }
 
-  /* ============================================================
-     RENDER: TEAMS
-     ============================================================ */
+  // ============================================================
+  // RENDER: TEAMS
+  // ============================================================
   function renderTeams(){
     const ids = Object.keys(teams).map(Number).sort((a,b)=>a-b);
     $("#teamsGrid").innerHTML = `
@@ -948,9 +1082,9 @@
     `;
   }
 
-  /* ============================================================
-     RENDER: FIXTURES
-     ============================================================ */
+  // ============================================================
+  // RENDER: FIXTURES
+  // ============================================================
   function renderFixtures(){
     const host = $("#fixturesList");
     host.innerHTML = "";
@@ -1009,9 +1143,9 @@
     attachTeamChipHandlers_();
   }
 
-  /* ============================================================
-     RENDER: LADDER
-     ============================================================ */
+  // ============================================================
+  // RENDER: LADDER
+  // ============================================================
   function renderLadder(){
     const ladder = buildLadder();
     $("#ladderTable").innerHTML = `
@@ -1067,9 +1201,9 @@
     $("#kpiTopPlayer").textContent = players[0]?.name ?? "—";
   }
 
-  /* ============================================================
-     RENDER: PLAYER STATS
-     ============================================================ */
+  // ============================================================
+  // RENDER: PLAYER STATS
+  // ============================================================
   function renderPlayerStats(){
     const rows = buildPlayerStats();
     $("#playerStatsTable").innerHTML = `
@@ -1103,9 +1237,9 @@
     attachTeamChipHandlers_();
   }
 
-  /* ============================================================
-     UPLOAD SCORES: selectors + sheet
-     ============================================================ */
+  // ============================================================
+  // UPLOAD SCORES: selectors + sheet
+  // ============================================================
   function populateRoundSelect(){
     const rs = $("#roundSelect");
     const rj = $("#roundJump");
@@ -1151,7 +1285,6 @@
   function renderScoreSheet(){
     const host = $("#sheetHost");
     host.innerHTML = "";
-
     const ms = $("#matchSelect");
     if (!ms.options.length){
       host.innerHTML = `<div class="muted">No match selected.</div>`;
@@ -1246,7 +1379,7 @@
             </div>
           </div>
 
-          <div class="foot">Saving updates Fixtures, Ladder, and Player Stats on this device.</div>
+          <div class="foot">Saving updates Fixtures, Ladder, Finals, and Player Stats on this device.</div>
         </div>
       </div>
     `;
@@ -1254,16 +1387,6 @@
     const sheet = host.querySelector(".sheet");
     sheet.querySelectorAll("input[type='number']").forEach(inp=>{
       inp.addEventListener("input", ()=>recalcSheet_(sheet, a, b));
-      inp.addEventListener("keydown", (e)=>{
-        if (e.key === "Enter"){
-          e.preventDefault();
-          const inputs = Array.from(sheet.querySelectorAll("input[type='number']"));
-          const i = inputs.indexOf(inp);
-          const next = inputs[i+1] || inputs[0];
-          next.focus();
-          next.select?.();
-        }
-      });
     });
 
     sheet.querySelector("#btnSaveSheet").addEventListener("click", ()=>{
@@ -1350,13 +1473,7 @@
       `;
     }
 
-    const out = {
-      ok,
-      pairs: pairsOut,
-      aSets, bSets,
-      aGamesTotal, bGamesTotal,
-      aPts: pts.aPts, bPts: pts.bPts
-    };
+    const out = { ok, pairs: pairsOut, aSets, bSets, aGamesTotal, bGamesTotal, aPts: pts.aPts, bPts: pts.bPts };
     return returnObject ? out : out;
   }
 
@@ -1384,6 +1501,7 @@
     renderHome();
     renderFixtures();
     renderLadder();
+    renderFinals();
     renderPlayerStats();
   }
 
@@ -1396,7 +1514,7 @@
       delete RESULTS[id];
       saveResults_();
       $("#sheetHost").innerHTML = `<div class="muted">Match cleared. Load the score sheet to re-enter.</div>`;
-      renderHome(); renderFixtures(); renderLadder(); renderPlayerStats();
+      renderHome(); renderFixtures(); renderLadder(); renderFinals(); renderPlayerStats();
       toast_("Cleared");
     });
   }
@@ -1406,14 +1524,14 @@
       RESULTS = {};
       saveResults_();
       $("#sheetHost").innerHTML = `<div class="muted">All results cleared.</div>`;
-      renderHome(); renderFixtures(); renderLadder(); renderPlayerStats();
+      renderHome(); renderFixtures(); renderLadder(); renderFinals(); renderPlayerStats();
       toast_("Reset");
     });
   }
 
-  /* ============================================================
-     CONFIRM DIALOG
-     ============================================================ */
+  // ============================================================
+  // CONFIRM DIALOG
+  // ============================================================
   function openConfirm(title, msg, onYes){
     const d = $("#confirmDialog");
     $("#confirmTitle").textContent = title;
@@ -1431,9 +1549,9 @@
     if (typeof fn === "function") fn();
   });
 
-  /* ============================================================
-     TOAST
-     ============================================================ */
+  // ============================================================
+  // TOAST
+  // ============================================================
   let toastTimer = null;
   function toast_(msg){
     let el = document.getElementById("toast");
@@ -1460,27 +1578,27 @@
     toastTimer = setTimeout(()=>{ el.style.opacity = "0"; }, 1800);
   }
 
-  /* ============================================================
-     NAV
-     ============================================================ */
+  // ============================================================
+  // NAV
+  // ============================================================
   function setView(name){
     $$(".tab").forEach(t=>t.setAttribute("aria-selected", String(t.dataset.view===name)));
     $$(".view").forEach(v=>v.hidden = true);
     $(`#view-${name}`).hidden = false;
 
-    if (name==="home"){ renderHome(); renderLadder(); }
+    if (name==="home"){ renderHome(); renderLadder(); renderFinals(); }
     if (name==="teams"){ renderTeams(); attachTeamChipHandlers_(); }
     if (name==="fixtures"){ renderFixtures(); }
     if (name==="results"){ renderGate_(); if (isUnlocked_()){ populateRoundSelect(); populateMatchSelect(); } }
-    if (name==="ladder"){ renderLadder(); }
+    if (name==="ladder"){ renderLadder(); renderFinals(); }
+    if (name==="finals"){ renderFinals(); }
     if (name==="players"){ renderPlayerStats(); }
   }
 
-  /* ============================================================
-     INIT
-     ============================================================ */
+  // ============================================================
+  // INIT
+  // ============================================================
   function init(){
-    // Tabs
     $$(".tab").forEach(btn=>btn.addEventListener("click", ()=>setView(btn.dataset.view)));
 
     // Gate
@@ -1488,11 +1606,11 @@
     $("#gateCode").addEventListener("keydown", (e)=>{ if (e.key === "Enter") tryUnlock_(); });
     $("#btnLock").addEventListener("click", lock_);
 
-    // Results tools
+    // Tools
     $("#btnClearMatch").addEventListener("click", clearSelectedMatch);
     $("#btnResetAll").addEventListener("click", resetAllResults);
 
-    // Results selectors
+    // Selectors
     populateRoundSelect();
     $("#roundSelect").addEventListener("change", ()=>{
       populateMatchSelect();
@@ -1503,7 +1621,7 @@
       renderScoreSheet();
     });
 
-    // Jump to round
+    // Jump
     $("#btnGo").addEventListener("click", ()=>{
       const r = Number($("#roundJump").value);
       const el = document.getElementById(`round-${r}`);
@@ -1529,26 +1647,26 @@
       try{
         const txt = await f.text();
         const obj = JSON.parse(txt);
-        if (!obj || typeof obj !== "object") throw new Error("Invalid file");
-        RESULTS = obj;
+        RESULTS = obj || {};
         saveResults_();
-        renderHome(); renderFixtures(); renderLadder(); renderPlayerStats();
+        renderHome(); renderFixtures(); renderLadder(); renderFinals(); renderPlayerStats();
         toast_("Imported ✔");
       } catch(err){
-        alert(err?.message || "Import failed");
+        alert("Could not import. Make sure it's a valid JSON export from this site.");
       } finally {
         e.target.value = "";
       }
     });
 
-    // Initial
+    // Initial render
     updateUploadTab_();
     renderGate_();
-    setView("home");
     renderTeams();
-    renderPlayerStats();
     renderFixtures();
     renderLadder();
+    renderFinals();
+    renderPlayerStats();
+    setView("home");
   }
 
   init();
