@@ -1371,6 +1371,13 @@ function attachTeamChipHandlers_(){
    ========================= */
 
 function setView(name){
+  // Gate Upload Scores
+  if (name === "results" && !isUploadUnlocked_()){
+    openCodeDialog_(()=>setView("results"));
+    // stay on current view (don’t switch)
+    return;
+  }
+
   $$(".tab").forEach(t=>t.setAttribute("aria-selected", String(t.dataset.view===name)));
   $$(".view").forEach(v=>v.hidden = true);
   $(`#view-${name}`).hidden = false;
@@ -1378,7 +1385,6 @@ function setView(name){
   if (name==="home"){ renderHome(); renderLadder(); }
   if (name==="teams"){ renderTeams(); attachTeamChipHandlers_(); }
   if (name==="fixtures"){ renderFixtures(); }
-  if (name==="results"){ /* no auto render */ }
   if (name==="ladder"){ renderLadder(); }
   if (name==="players"){ renderPlayerStats(); }
 }
@@ -1443,6 +1449,17 @@ function toast_(msg){
    ========================= */
 
 function init(){
+  // Code dialog buttons
+document.getElementById("btnCodeClose").addEventListener("click", ()=>document.getElementById("codeDialog").close());
+document.getElementById("btnCodeUnlock").addEventListener("click", tryUnlock_);
+document.getElementById("codeInput").addEventListener("keydown", (e)=>{
+  if (e.key === "Enter") { e.preventDefault(); tryUnlock_(); }
+});
+document.getElementById("btnCodeLogout").addEventListener("click", ()=>{
+  setUploadUnlocked_(false);
+  document.getElementById("codeDialog").close();
+  toast_("Locked 🔒");
+});
   // Tabs
   $$(".tab").forEach(btn=>btn.addEventListener("click", ()=>setView(btn.dataset.view)));
 
@@ -1488,6 +1505,7 @@ function init(){
   renderPlayerStats();
   renderFixtures();
   renderLadder();
+  updateUploadTabLock_();
 }
 
 init();
