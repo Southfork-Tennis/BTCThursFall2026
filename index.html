@@ -558,10 +558,10 @@
     <!-- PLAYER STATS -->
     <section id="view-players" class="view" hidden>
       <div class="card">
-        <div class="hd"><h2 class="title">Player Statistics</h2><div class="muted">Calculated from the 6 doubles pairings each night</div></div>
+        <div class="hd"><h2 class="title">Player Statistics</h2><div class="muted">Now tracking <b>Sets Won</b> and <b>Games Won</b></div></div>
         <div class="bd">
           <div id="playerStatsTable"></div>
-          <div class="foot">Leaderboard sorts by Win % (min 6 sets), then Sets Won, then Sets Played.</div>
+          <div class="foot">Leaderboard sorts by Sets Won, then Games Won, then Win % (min 6 sets), then Sets Played.</div>
         </div>
       </div>
     </section>
@@ -812,7 +812,7 @@
   }
 
   // ============================================================
-  // LADDER + PLAYER STATS
+  // LADDER + PLAYER STATS (SETS WON + GAMES WON)
   // ============================================================
   function buildLadder(){
     const base = {};
@@ -850,9 +850,19 @@
   }
 
   function buildPlayerStats(){
+    // per-player:
+    // - setsWon, setsPlayed, winPct
+    // - gamesWon, gamesPlayed, gamesPct
     const stats = new Map();
     for (const [tid, t] of Object.entries(teams)){
-      t.players.forEach(p=>stats.set(p, { name:p, teamId:Number(tid), setsWon:0, setsPlayed:0 }));
+      t.players.forEach(p=>stats.set(p, {
+        name:p,
+        teamId:Number(tid),
+        setsWon:0,
+        setsPlayed:0,
+        gamesWon:0,
+        gamesPlayed:0
+      }));
     }
 
     for (const m of Object.values(RESULTS)){
@@ -860,29 +870,68 @@
       if (!m.pairs) continue;
 
       const teamA = teams[m.a], teamB = teams[m.b];
+
       for (const pr of pairings){
         const res = m.pairs[pr.key];
         if (!res) continue;
-        const w = decideSetWinner(res.a, res.b).winner;
-        if (!w) continue;
+
+        const aG = Number(res.a);
+        const bG = Number(res.b);
+
+        // Only count if both scores present
+        if (!Number.isFinite(aG) || !Number.isFinite(bG)) continue;
+
+        const d = decideSetWinner(aG, bG);
+        if (!d.winner) continue;
 
         const aPlayers = pr.a.map(n=>teamA.players[n-1]);
         const bPlayers = pr.b.map(n=>teamB.players[n-1]);
 
-        for (const p of aPlayers){ const s = stats.get(p); s.setsPlayed++; if (w === "A") s.setsWon++; }
-        for (const p of bPlayers){ const s = stats.get(p); s.setsPlayed++; if (w === "B") s.setsWon++; }
+        // Games: each player gets credited with their side's games in that set
+        for (const p of aPlayers){
+          const s = stats.get(p);
+          s.gamesPlayed += (aG + bG);
+          s.gamesWon += aG;
+        }
+        for (const p of bPlayers){
+          const s = stats.get(p);
+          s.gamesPlayed += (aG + bG);
+          s.gamesWon += bG;
+        }
+
+        // Sets: each player participated in 1 set
+        for (const p of aPlayers){
+          const s = stats.get(p);
+          s.setsPlayed += 1;
+          if (d.winner === "A") s.setsWon += 1;
+        }
+        for (const p of bPlayers){
+          const s = stats.get(p);
+          s.setsPlayed += 1;
+          if (d.winner === "B") s.setsWon += 1;
+        }
       }
     }
 
-    const rows = Array.from(stats.values()).map(s=>({ ...s, winPct: s.setsPlayed ? (s.setsWon / s.setsPlayed) : 0 }));
+    const rows = Array.from(stats.values()).map(s=>({
+      ...s,
+      winPct: s.setsPlayed ? (s.setsWon / s.setsPlayed) : 0,
+      gamesPct: s.gamesPlayed ? (s.gamesWon / s.gamesPlayed) : 0
+    }));
+
+    // Sort: Sets Won, then Games Won, then Win% (min 6 sets), then Sets Played
     rows.sort((a,b)=>{
+      const sw = b.setsWon - a.setsWon; if (sw) return sw;
+      const gw = b.gamesWon - a.gamesWon; if (gw) return gw;
+
       const aQ = a.setsPlayed >= 6, bQ = b.setsPlayed >= 6;
       if (aQ !== bQ) return (bQ ? 1 : -1);
+
       const wp = b.winPct - a.winPct; if (wp) return wp;
-      const sw = b.setsWon - a.setsWon; if (sw) return sw;
       const sp = b.setsPlayed - a.setsPlayed; if (sp) return sp;
       return a.name.localeCompare(b.name);
     });
+
     return rows;
   }
 
@@ -890,7 +939,6 @@
   // FINALS (AUTO-UPDATES WITH CURRENT TOP 4)
   // ============================================================
   function renderFinals(){
-    // dates table
     $("#dateElim").textContent = FINALS_DATES.elimination || "TBA";
     $("#dateQual").textContent = FINALS_DATES.qualifying || "TBA";
     $("#datePrelim").textContent = FINALS_DATES.preliminary || "TBA";
@@ -903,7 +951,6 @@
     const t3 = top4[2] ?? null;
     const t4 = top4[3] ?? null;
 
-    // Live vs locked indicator (locked after all Round 14 matches are recorded)
     const round14 = rounds.find(r=>r.r===14);
     let round14Complete = true;
     if (round14){
@@ -965,7 +1012,7 @@
         </div>
 
         <div class="muted" style="font-size:12px">
-          Current Top 4: 
+          Current Top 4:
           ${top4.map((tid,idx)=>`<span class="badge">${idx+1}</span> ${teamChipHTML(tid)}`).join(" • ")}
         </div>
       </div>
@@ -1215,11 +1262,15 @@
             <th class="right">Sets Won</th>
             <th class="right">Sets Played</th>
             <th class="right">Win %</th>
+            <th class="right">Games Won</th>
+            <th class="right">Games Played</th>
+            <th class="right">Games %</th>
           </tr>
         </thead>
         <tbody>
           ${rows.map(r=>{
             const pct = r.setsPlayed ? (r.winPct*100).toFixed(1) : "0.0";
+            const gPct = r.gamesPlayed ? (r.gamesPct*100).toFixed(1) : "0.0";
             const badge = r.setsPlayed < 6 ? `<span class="badge warn" title="Small sample size">&lt;6 sets</span>` : "";
             return `
               <tr>
@@ -1228,6 +1279,9 @@
                 <td class="right"><b>${r.setsWon}</b></td>
                 <td class="right">${r.setsPlayed}</td>
                 <td class="right">${pct}%</td>
+                <td class="right"><b>${r.gamesWon}</b></td>
+                <td class="right">${r.gamesPlayed}</td>
+                <td class="right">${gPct}%</td>
               </tr>
             `;
           }).join("")}
