@@ -661,7 +661,8 @@
    1) Deploy Apps Script web app (EXEC URL)
    2) Paste URL below
    ============================================================ */
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw8GVO1VqmhHyNhgoVr25lvkROu0D0lrqDA0RQqNQ0e3nxs8ZpJl_uXJe0XIvJjt-H1BQ/exec";  // <-- paste your Apps Script web app URL
+const SHEETS_WEBAPP_URL =
+  "https://script.google.com/macros/s/AKfycbw8GVO1VqmhHyNhgoVr25lvkROu0D0lrqDA0RQqNQ0e3nxs8ZpJl_uXJe0XIvJjt-H1BQ/exec";
 const API_KEY = "BTC1818"; // must match Code.gs API_KEY
 
 /* Finals dates (edit these) */
@@ -745,7 +746,10 @@ function cloudReady_(){
 }
 
 async function cloudDump_(){
-const url = `${SHEETS_WEBAPP_URL}?action=dump&key=${API_KEY}`;
+const url = new URL(SHEETS_WEBAPP_URL);
+url.searchParams.set("action","dump");
+url.searchParams.set("key", API_KEY);
+console.log("DUMP URL:", url.toString());
   
 
   const res = await fetch(url.toString(), { method:"GET" });
