@@ -745,8 +745,7 @@ function cloudReady_(){
 }
 
 async function cloudDump_(){
-  const url = new URL(SHEETS_WEBAPP_URL);
-  url.searchParams.set("action","dump");
+const url = `${SHEETS_WEBAPP_URL}?action=dump&key=${API_KEY}`;
   
 
   const res = await fetch(url.toString(), { method:"GET" });
