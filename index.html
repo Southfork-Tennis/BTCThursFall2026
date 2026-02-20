@@ -4,6 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Berwick Tennis Club — Thursday Night Comp (Autumn 2026)</title>
+
+  <!-- Chart.js for graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
   <style>
     :root{
       --bg:#070b16;
@@ -122,6 +126,7 @@
     }
     input[type="number"]{width:86px}
     .hint{font-size:12px; color:var(--muted)}
+    .spacer{flex:1}
 
     .badge{
       display:inline-flex; align-items:center; gap:6px;
@@ -318,6 +323,22 @@
     .stage .subline{margin-top:6px; font-size:12px; color:var(--muted);}
     .stage .match{margin-top:6px; font-size:14px; font-weight:800;}
 
+    /* History page */
+    .chartCard{
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: rgba(255,255,255,.02);
+      padding:12px;
+    }
+    .chartWrap{
+      position:relative;
+      width:100%;
+      height:320px;
+    }
+    @media (max-width:760px){
+      .chartWrap{height:280px;}
+    }
+
     @media print{
       header{position:static; background:#fff; color:#000; border:none}
       body{background:#fff; color:#000}
@@ -327,6 +348,7 @@
     }
   </style>
 </head>
+
 <body>
 <header>
   <div class="wrap top">
@@ -355,6 +377,7 @@
       <button class="tab" data-view="ladder">Ladder</button>
       <button class="tab" data-view="finals">Finals</button>
       <button class="tab" data-view="players">Player Stats</button>
+      <button class="tab" data-view="history">Match History 📊</button>
       <button class="tab" data-view="rules">Rules</button>
     </nav>
   </div>
@@ -540,6 +563,57 @@
     </div>
   </section>
 
+  <!-- MATCH HISTORY -->
+  <section id="view-history" class="view" hidden>
+    <div class="grid two">
+      <div class="card">
+        <div class="hd">
+          <div class="row" style="justify-content:space-between">
+            <div>
+              <h2 class="title">Match History</h2>
+              <div class="muted">Per-team match log + points-over-time graph</div>
+            </div>
+            <span class="pill"><span class="dot"></span><span id="historyPill">Loading…</span></span>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="row" style="margin-bottom:12px">
+            <span class="hint">Team:</span>
+            <select id="historyTeamSelect"></select>
+
+            <span class="badge" id="historyModeBadge">Single team</span>
+
+            <span class="spacer"></span>
+
+            <button class="btn" id="btnHistorySingle">Single team</button>
+            <button class="btn" id="btnHistoryAll">All teams</button>
+          </div>
+
+          <div class="chartCard">
+            <div class="row" style="justify-content:space-between; margin-bottom:8px">
+              <div class="muted" id="historyChartTitle">Team points over time (cumulative)</div>
+              <div class="hint">Auto updates when results are saved</div>
+            </div>
+            <div class="chartWrap">
+              <canvas id="historyChart"></canvas>
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px" id="historyKpis"></div>
+
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="hd">
+          <h2 class="title">Round-by-round</h2>
+          <div class="muted">Shows opponent, sets, total games and points for each round</div>
+        </div>
+        <div class="bd" id="historyTable"></div>
+      </div>
+    </div>
+  </section>
+
   <!-- RULES -->
   <section id="view-rules" class="view" hidden>
     <div class="card">
@@ -584,8 +658,10 @@
 <script>
 /* ============================================================
    CONFIG — IMPORTANT
+   1) Deploy Apps Script web app (EXEC URL)
+   2) Paste URL below
    ============================================================ */
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw8GVO1VqmhHyNhgoVr25lvkROu0D0lrqDA0RQqNQ0e3nxs8ZpJl_uXJe0XIvJjt-H1BQ/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw8GVO1VqmhHyNhgoVr25lvkROu0D0lrqDA0RQqNQ0e3nxs8ZpJl_uXJe0XIvJjt-H1BQ/exec";  // <-- paste your Apps Script web app URL
 const API_KEY = "BTC1818"; // must match Code.gs API_KEY
 
 /* Finals dates (edit these) */
@@ -643,20 +719,20 @@ const pairings = [
 /* ---------- State ---------- */
 let RESULTS = {}; // matchKey -> record (loaded from Google Sheet)
 
+/* History page state */
+let HISTORY_MODE = "single"; // "single" | "all"
+let historyChartInstance = null;
+
 /* ---------- Helpers ---------- */
 const $ = (sel)=>document.querySelector(sel);
 const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
 function escapeHtml_(s){
-  return String(s).replace(/[&<>"']/g, (c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  return String(s).replace(/[&<>"']/g, (c)=>({"&":"&amp;","<":"&lt;"," >":"&gt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c] || c));
 }
 function matchId(roundNum, matchIndex){ return `r${roundNum}_m${matchIndex}`; }
 function teamName(id){ return teams[id]?.name ?? `Team ${id}`; }
 
-/* ============================================================
-   CLOUD API (FIXED: prevents Chrome “Failed to fetch”)
-   - GET dump stays GET
-   - POST uses text/plain (avoids CORS preflight issues)
-   ============================================================ */
+/* ---------- Cloud API ---------- */
 function cloudReady_(){
   return SHEETS_WEBAPP_URL && !SHEETS_WEBAPP_URL.includes("PASTE_YOUR_WEB_APP_URL");
 }
@@ -664,7 +740,7 @@ async function cloudDump_(){
   const url = new URL(SHEETS_WEBAPP_URL);
   url.searchParams.set("action","dump");
   url.searchParams.set("key", API_KEY);
-  const res = await fetch(url.toString(), { method:"GET", mode:"cors" });
+  const res = await fetch(url.toString(), { method:"GET" });
   if (!res.ok) throw new Error("Could not load from Google Sheets (dump).");
   const json = await res.json();
   if (!json.ok) throw new Error(json.error || "Dump failed.");
@@ -673,8 +749,7 @@ async function cloudDump_(){
 async function cloudUpsert_(matchKey, record){
   const res = await fetch(SHEETS_WEBAPP_URL, {
     method:"POST",
-    mode:"cors",
-    headers:{ "Content-Type":"text/plain;charset=utf-8" },
+    headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({ action:"upsert", key: API_KEY, matchKey, record })
   });
   if (!res.ok) throw new Error("Could not save to Google Sheets (upsert).");
@@ -684,8 +759,7 @@ async function cloudUpsert_(matchKey, record){
 async function cloudDelete_(matchKey){
   const res = await fetch(SHEETS_WEBAPP_URL, {
     method:"POST",
-    mode:"cors",
-    headers:{ "Content-Type":"text/plain;charset=utf-8" },
+    headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({ action:"delete", key: API_KEY, matchKey })
   });
   if (!res.ok) throw new Error("Could not delete from Google Sheets.");
@@ -695,8 +769,7 @@ async function cloudDelete_(matchKey){
 async function cloudReset_(){
   const res = await fetch(SHEETS_WEBAPP_URL, {
     method:"POST",
-    mode:"cors",
-    headers:{ "Content-Type":"text/plain;charset=utf-8" },
+    headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({ action:"reset", key: API_KEY })
   });
   if (!res.ok) throw new Error("Could not reset Google Sheets.");
@@ -1488,11 +1561,7 @@ async function saveSheetCloud_(sheetEl, aTeamId, bTeamId, computed){
     setCloudStatus_("Saved ✔", "good", "Saved to the shared sheet.");
     toast_("Saved ✔");
 
-    renderHome();
-    renderFixtures();
-    renderLadder();
-    renderFinals();
-    renderPlayerStats();
+    rerenderAll_();
 
   } catch (e){
     setCloudStatus_("Save failed", "bad", e?.message || "Could not save.");
@@ -1511,9 +1580,10 @@ async function clearSelectedMatch(){
       await cloudDelete_(id);
       delete RESULTS[id];
       $("#sheetHost").innerHTML = `<div class="muted">Match cleared. Load the score sheet to re-enter.</div>`;
-      renderHome(); renderFixtures(); renderLadder(); renderFinals(); renderPlayerStats();
       setCloudStatus_("Deleted", "good", "Removed from the shared sheet.");
       toast_("Cleared");
+
+      rerenderAll_();
     } catch(e){
       setCloudStatus_("Delete failed", "bad", e?.message || "Could not delete.");
       alert(e?.message || "Delete failed");
@@ -1528,9 +1598,10 @@ async function resetAllResults(){
       await cloudReset_();
       RESULTS = {};
       $("#sheetHost").innerHTML = `<div class="muted">All results cleared.</div>`;
-      renderHome(); renderFixtures(); renderLadder(); renderFinals(); renderPlayerStats();
       setCloudStatus_("Reset", "good", "All results cleared.");
       toast_("Reset");
+
+      rerenderAll_();
     } catch(e){
       setCloudStatus_("Reset failed", "bad", e?.message || "Could not reset.");
       alert(e?.message || "Reset failed");
@@ -1542,6 +1613,7 @@ async function resetAllResults(){
 function setCloudStatus_(label, kind, msg){
   const b = $("#cloudStatus");
   const m = $("#cloudStatusMsg");
+  if (!b || !m) return;
   b.textContent = label;
   b.className = "badge " + (kind==="good"?"good":kind==="bad"?"bad":kind==="warn"?"warn":"");
   m.textContent = msg || "";
@@ -1591,6 +1663,318 @@ function toast_(msg){
   toastTimer = setTimeout(()=>{ el.style.opacity = "0"; }, 1800);
 }
 
+/* ---------- Match History (NEW) ---------- */
+function populateHistoryTeams_(){
+  const sel = $("#historyTeamSelect");
+  if (!sel) return;
+  sel.innerHTML = "";
+  Object.keys(teams).map(Number).sort((a,b)=>a-b).forEach(tid=>{
+    const opt = document.createElement("option");
+    opt.value = String(tid);
+    opt.textContent = `${teamName(tid)}`;
+    sel.appendChild(opt);
+  });
+}
+
+function findMatchForTeamInRound_(teamId, round){
+  // Returns { idx, a, b, id, record } or null if bye / not scheduled
+  for (let idx=0; idx<round.matches.length; idx++){
+    const [a,b] = round.matches[idx];
+    if (b == null) continue;
+    if (a === teamId || b === teamId){
+      const id = matchId(round.r, idx);
+      const record = RESULTS[id] || null;
+      return { idx, a, b, id, record };
+    }
+  }
+  return null;
+}
+
+function buildTeamHistory_(teamId){
+  const rows = [];
+  let cumPts = 0;
+  let cumSetsW = 0, cumSetsL = 0;
+  let cumGamesW = 0, cumGamesL = 0;
+
+  for (const round of rounds){
+    const found = findMatchForTeamInRound_(teamId, round);
+    if (!found){
+      rows.push({
+        round: round.r,
+        date: round.date,
+        status: "Bye",
+        opponent: null,
+        points: 0,
+        sets: null,
+        games: null,
+        cumPts,
+        cumSetsW, cumSetsL,
+        cumGamesW, cumGamesL,
+        played: false
+      });
+      continue;
+    }
+
+    const opp = (found.a === teamId) ? found.b : found.a;
+    const rec = found.record;
+
+    if (!rec){
+      rows.push({
+        round: round.r,
+        date: round.date,
+        status: "Not played",
+        opponent: opp,
+        points: 0,
+        sets: null,
+        games: null,
+        cumPts,
+        cumSetsW, cumSetsL,
+        cumGamesW, cumGamesL,
+        played: false
+      });
+      continue;
+    }
+
+    // figure perspective
+    const isA = (rec.a === teamId);
+    const pts = isA ? (Number(rec.aPts)||0) : (Number(rec.bPts)||0);
+    const setsW = isA ? (Number(rec.aSets)||0) : (Number(rec.bSets)||0);
+    const setsL = isA ? (Number(rec.bSets)||0) : (Number(rec.aSets)||0);
+    const gamesW = isA ? (Number(rec.aGamesTotal)||0) : (Number(rec.bGamesTotal)||0);
+    const gamesL = isA ? (Number(rec.bGamesTotal)||0) : (Number(rec.aGamesTotal)||0);
+
+    cumPts += pts;
+    cumSetsW += setsW; cumSetsL += setsL;
+    cumGamesW += gamesW; cumGamesL += gamesL;
+
+    const status = (setsW > setsL) ? "Won night" : (setsW < setsL) ? "Lost night" : "Tied night";
+
+    rows.push({
+      round: round.r,
+      date: round.date,
+      status,
+      opponent: opp,
+      points: pts,
+      sets: { w: setsW, l: setsL },
+      games: { w: gamesW, l: gamesL },
+      cumPts,
+      cumSetsW, cumSetsL,
+      cumGamesW, cumGamesL,
+      played: true
+    });
+  }
+
+  return rows;
+}
+
+function renderHistoryKpis_(teamId){
+  const rows = buildTeamHistory_(teamId);
+  const playedRows = rows.filter(r=>r.played);
+  const lastPlayed = [...playedRows].reverse()[0] || null;
+
+  let nightsW = 0, nightsL = 0, nightsT = 0;
+  for (const r of playedRows){
+    if (r.sets && r.sets.w > r.sets.l) nightsW++;
+    else if (r.sets && r.sets.w < r.sets.l) nightsL++;
+    else nightsT++;
+  }
+
+  const totalPts = playedRows.length ? playedRows[playedRows.length-1].cumPts : 0;
+  const totalSetsW = playedRows.length ? playedRows[playedRows.length-1].cumSetsW : 0;
+  const totalSetsL = playedRows.length ? playedRows[playedRows.length-1].cumSetsL : 0;
+
+  const host = $("#historyKpis");
+  host.innerHTML = `
+    <div class="k"><div class="n">${totalPts}</div><div class="l">Points (cumulative)</div></div>
+    <div class="k"><div class="n">${nightsW}-${nightsL}-${nightsT}</div><div class="l">Nights W-L-T</div></div>
+    <div class="k"><div class="n">${totalSetsW}–${totalSetsL}</div><div class="l">Sets (W–L)</div></div>
+  `;
+
+  $("#historyPill").textContent = lastPlayed ? `Last: R${lastPlayed.round} (${lastPlayed.status})` : "No results yet";
+}
+
+function renderHistoryTable_(teamId){
+  const rows = buildTeamHistory_(teamId);
+
+  $("#historyTable").innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th class="right">Round</th>
+          <th>Date</th>
+          <th>Opponent</th>
+          <th>Status</th>
+          <th class="right">Sets</th>
+          <th class="right">Games</th>
+          <th class="right">Pts</th>
+          <th class="right">Cum Pts</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r=>{
+          const oppCell = r.opponent ? teamChipHTML(r.opponent) : `<span class="muted">—</span>`;
+          const setsCell = r.sets ? `<b>${r.sets.w}–${r.sets.l}</b>` : `<span class="muted">—</span>`;
+          const gamesCell = r.games ? `<span class="muted">${r.games.w}–${r.games.l}</span>` : `<span class="muted">—</span>`;
+
+          let badge = `<span class="badge">—</span>`;
+          if (r.status === "Won night") badge = `<span class="badge good">Won</span>`;
+          else if (r.status === "Lost night") badge = `<span class="badge bad">Lost</span>`;
+          else if (r.status === "Tied night") badge = `<span class="badge warn">Tied</span>`;
+          else if (r.status === "Not played") badge = `<span class="badge">Not played</span>`;
+          else if (r.status === "Bye") badge = `<span class="badge">Bye</span>`;
+
+          return `
+            <tr>
+              <td class="right">R${r.round}</td>
+              <td><span class="muted">${escapeHtml_(r.date)}</span></td>
+              <td>${oppCell}</td>
+              <td>${badge}</td>
+              <td class="right">${setsCell}</td>
+              <td class="right">${gamesCell}</td>
+              <td class="right"><b>${r.points}</b></td>
+              <td class="right"><b>${r.cumPts}</b></td>
+            </tr>
+          `;
+        }).join("")}
+      </tbody>
+    </table>
+  `;
+  attachTeamChipHandlers_();
+}
+
+function destroyHistoryChart_(){
+  if (historyChartInstance){
+    historyChartInstance.destroy();
+    historyChartInstance = null;
+  }
+}
+
+function renderHistoryChartSingle_(teamId){
+  const rows = buildTeamHistory_(teamId);
+  const labels = rows.map(r=>`R${r.round}`);
+  const cumPts = rows.map(r=>r.cumPts);
+
+  destroyHistoryChart_();
+  const ctx = $("#historyChart").getContext("2d");
+
+  historyChartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: `${teamName(teamId)} — cumulative points`,
+        data: cumPts,
+        tension: 0.25,
+        pointRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: "#e9eeff" } },
+        tooltip: { enabled: true }
+      },
+      scales: {
+        x: { ticks: { color: "#93a4c7" }, grid: { color: "rgba(255,255,255,.08)" } },
+        y: { ticks: { color: "#93a4c7" }, grid: { color: "rgba(255,255,255,.08)" }, beginAtZero: true }
+      }
+    }
+  });
+
+  $("#historyModeBadge").textContent = "Single team";
+  $("#historyChartTitle").textContent = "Team points over time (cumulative)";
+}
+
+function renderHistoryChartAll_(){
+  const labels = rounds.map(r=>`R${r.r}`);
+  const datasets = Object.keys(teams).map(Number).sort((a,b)=>a-b).map(tid=>{
+    const rows = buildTeamHistory_(tid);
+    return {
+      label: `${teamName(tid)}`,
+      data: rows.map(r=>r.cumPts),
+      tension: 0.25,
+      pointRadius: 2
+    };
+  });
+
+  destroyHistoryChart_();
+  const ctx = $("#historyChart").getContext("2d");
+
+  historyChartInstance = new Chart(ctx, {
+    type: "line",
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: "#e9eeff" } },
+        tooltip: { enabled: true }
+      },
+      scales: {
+        x: { ticks: { color: "#93a4c7" }, grid: { color: "rgba(255,255,255,.08)" } },
+        y: { ticks: { color: "#93a4c7" }, grid: { color: "rgba(255,255,255,.08)" }, beginAtZero: true }
+      }
+    }
+  });
+
+  $("#historyModeBadge").textContent = "All teams";
+  $("#historyChartTitle").textContent = "All teams — cumulative points over time";
+}
+
+function renderHistory(){
+  populateHistoryTeams_();
+
+  const sel = $("#historyTeamSelect");
+  const defaultTeam = sel.value ? Number(sel.value) : 1;
+
+  if (HISTORY_MODE === "all"){
+    renderHistoryChartAll_();
+    // still show table for selected team
+    renderHistoryKpis_(defaultTeam);
+    renderHistoryTable_(defaultTeam);
+  } else {
+    renderHistoryKpis_(defaultTeam);
+    renderHistoryTable_(defaultTeam);
+    renderHistoryChartSingle_(defaultTeam);
+  }
+
+  sel.onchange = ()=>{
+    const tid = Number(sel.value);
+    renderHistoryKpis_(tid);
+    renderHistoryTable_(tid);
+    if (HISTORY_MODE === "single") renderHistoryChartSingle_(tid);
+  };
+
+  $("#btnHistorySingle").onclick = ()=>{
+    HISTORY_MODE = "single";
+    const tid = Number($("#historyTeamSelect").value);
+    renderHistoryKpis_(tid);
+    renderHistoryTable_(tid);
+    renderHistoryChartSingle_(tid);
+  };
+  $("#btnHistoryAll").onclick = ()=>{
+    HISTORY_MODE = "all";
+    const tid = Number($("#historyTeamSelect").value);
+    renderHistoryChartAll_();
+    renderHistoryKpis_(tid);
+    renderHistoryTable_(tid);
+  };
+}
+
+/* ---------- Re-render helper ---------- */
+function rerenderAll_(){
+  renderHome();
+  renderFixtures();
+  renderLadder();
+  renderFinals();
+  renderPlayerStats();
+
+  // If user is on history page, refresh it too
+  const historyVisible = !$("#view-history").hidden;
+  if (historyVisible) renderHistory();
+}
+
 /* ---------- Navigation ---------- */
 function setView(name){
   $$(".tab").forEach(t=>t.setAttribute("aria-selected", String(t.dataset.view===name)));
@@ -1604,6 +1988,7 @@ function setView(name){
   if (name==="ladder"){ renderLadder(); renderFinals(); }
   if (name==="finals"){ renderFinals(); }
   if (name==="players"){ renderPlayerStats(); }
+  if (name==="history"){ renderHistory(); }
 }
 
 /* ---------- Init ---------- */
@@ -1640,6 +2025,7 @@ function init(){
 
   setCloudStatus_("Loading…", "warn", cloudReady_() ? "Reading from Google Sheets…" : "Paste your Web App URL into SHEETS_WEBAPP_URL");
 
+  // Load from sheet
   (async ()=>{
     try{
       if (!cloudReady_()) throw new Error("Missing web app URL");
@@ -1653,6 +2039,7 @@ function init(){
       renderLadder();
       renderFinals();
       renderPlayerStats();
+      renderHome();
       setView("home");
     }
   })();
