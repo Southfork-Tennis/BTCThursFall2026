@@ -1,1424 +1,319 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Berwick Tennis Club — Thursday Night Comp (Autumn 2026)</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Berwick Tennis Club — Admin</title>
 
-  <!-- Chart.js for graphs -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-  <style>
-    :root{
-      --bg:#070b16;
-      --card:rgba(18,26,51,.78);
-      --muted:#93a4c7;
-      --text:#e9eeff;
-      --accent:#7dd3fc;
-      --accent2:#a78bfa;
-      --good:#34d399;
-      --warn:#fbbf24;
-      --bad:#fb7185;
-      --border:rgba(255,255,255,.10);
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --radius: 16px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      background:
-        radial-gradient(1200px 600px at 20% -10%, rgba(125,211,252,.20), transparent 60%),
-        radial-gradient(900px 500px at 90% 0%, rgba(167,139,250,.18), transparent 55%),
-        var(--bg);
-      color:var(--text);
-    }
-    header{
-      position:sticky; top:0;
-      backdrop-filter: blur(10px);
-      background: rgba(7,11,22,.78);
-      border-bottom:1px solid var(--border);
-      z-index:10
-    }
-    .wrap{max-width:1150px; margin:0 auto; padding:18px 18px}
-    .top{display:flex; align-items:center; gap:14px; justify-content:space-between; flex-wrap:wrap}
-    .brand{display:flex; align-items:center; gap:12px}
-    h1{font-size:18px; margin:0}
-    .sub{font-size:12px; color:var(--muted); margin-top:2px}
-
-    nav{display:flex; gap:8px; flex-wrap:wrap}
-    .tab{
-      border:1px solid var(--border);
-      background: rgba(18,26,51,.65);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:999px;
-      cursor:pointer;
-      font-size:13px;
-    }
-    .tab[aria-selected="true"]{
-      border-color: rgba(125,211,252,.55);
-      background: rgba(125,211,252,.12)
-    }
-
-    main{padding:18px 0 60px}
-    .grid{display:grid; gap:14px}
-    .grid.two{grid-template-columns: 1.15fr .85fr}
-    @media (max-width: 900px){.grid.two{grid-template-columns:1fr}}
-
-    .card{
-      background: var(--card);
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow)
-    }
-    .card .hd{padding:14px 14px 0}
-    .card .bd{padding:14px}
-    .title{font-size:16px; margin:0 0 6px}
-    .muted{color:var(--muted)}
-    .foot{margin-top:10px; font-size:12px; color:var(--muted)}
-
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      border:1px solid var(--border);
-      padding:7px 10px;
-      border-radius:999px;
-      font-size:12px;
-      color:var(--muted)
-    }
-    .dot{width:8px; height:8px; border-radius:50%; background:var(--accent)}
-
-    table{width:100%; border-collapse:collapse; overflow:hidden; border-radius:14px}
-    th,td{padding:10px 10px; border-bottom:1px solid var(--border); text-align:left; font-size:13px; vertical-align:top}
-    th{font-size:12px; color:var(--muted); font-weight:600}
-    tr:hover td{background: rgba(255,255,255,.03)}
-    .right{text-align:right}
-    .center{text-align:center}
-
-    .kpi{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
-    @media (max-width: 760px){.kpi{grid-template-columns:repeat(2,1fr)}}
-    .k{padding:12px; border:1px solid var(--border); border-radius:14px; background: rgba(255,255,255,.03)}
-    .k .n{font-size:20px; font-weight:800}
-    .k .l{font-size:12px; color:var(--muted)}
-
-    .btn{
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.04);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:12px;
-      cursor:pointer;
-      font-size:13px
-    }
-    .btn.primary{border-color: rgba(125,211,252,.55); background: rgba(125,211,252,.14)}
-    .btn.danger{border-color: rgba(251,113,133,.55); background: rgba(251,113,133,.10)}
-    .btn:disabled{opacity:.5; cursor:not-allowed}
-
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    select,input{
-      background: rgba(7,11,22,.65);
-      border:1px solid var(--border);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:12px;
-      font-size:13px;
-      outline:none
-    }
-    input[type="number"]{width:86px}
-    .hint{font-size:12px; color:var(--muted)}
-    .spacer{flex:1}
-
-    .badge{
-      display:inline-flex; align-items:center; gap:6px;
-      padding:4px 8px;
-      border-radius:999px;
-      font-size:12px;
-      border:1px solid var(--border);
-      color:var(--muted)
-    }
-    .badge.good{border-color: rgba(52,211,153,.45); color: rgba(52,211,153,.95)}
-    .badge.warn{border-color: rgba(251,191,36,.45); color: rgba(251,191,36,.95)}
-    .badge.bad{border-color: rgba(251,113,133,.45); color: rgba(251,113,133,.95)}
-
-    /* Crest */
-    .crestWrap{
-      width:46px; height:46px; border-radius:14px;
-      display:grid; place-items:center;
-      box-shadow: var(--shadow);
-      background: rgba(18,26,51,.65);
-      border:1px solid var(--border);
-    }
-
-    /* Team chip popover */
-    .team-chip{
-      position:relative;
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:4px 10px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.03);
-      color: var(--text);
-      cursor:pointer;
-      font: inherit;
-      line-height: 1.2;
-      user-select:none;
-      white-space: nowrap;
-    }
-    .team-chip:hover{border-color: rgba(125,211,252,.45)}
-    .team-pop{
-      position:absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      min-width: 260px;
-      background: rgba(18,26,51,.98);
-      border:1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: var(--shadow);
-      padding:10px 10px;
-      display:none;
-      z-index: 50;
-    }
-    .team-chip:hover .team-pop{display:block}
-    .team-chip[data-open="true"] .team-pop{display:block}
-    .team-pop .hdr{
-      display:flex; justify-content:space-between; align-items:center;
-      padding-bottom:8px; margin-bottom:8px; border-bottom:1px solid var(--border);
-    }
-    .team-pop .hdr b{font-size:13px}
-    .team-pop .closex{
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.03);
-      color: var(--text);
-      border-radius: 10px;
-      padding:4px 8px;
-      cursor:pointer;
-      font-size:12px;
-      display:none;
-    }
-    .team-pop .p{
-      display:flex; justify-content:space-between; gap:10px;
-      padding:5px 4px;
-      border-radius: 10px;
-    }
-    .team-pop .p:hover{background: rgba(255,255,255,.03)}
-    .team-pop .rank{color: var(--muted); font-size:12px}
-    .team-pop .name{font-size:13px}
-
-    @media (max-width: 760px){
-      .team-chip:hover .team-pop{display:none}
-      .team-pop{
-        position:fixed;
-        left:50%;
-        transform:translateX(-50%);
-        top:16%;
-        width:min(560px, 94vw)
-      }
-      .team-pop .closex{display:inline-flex}
-      input[type="number"]{width:78px}
-    }
-
-    /* Finals bracket */
-    .bracket{display:grid; grid-template-columns:1fr; gap:12px;}
-    .stage{border:1px solid var(--border); border-radius:14px; background: rgba(255,255,255,.02); padding:12px;}
-    .stage .subline{margin-top:6px; font-size:12px; color:var(--muted);}
-    .stage .match{margin-top:6px; font-size:14px; font-weight:800;}
-
-    /* History page */
-    .chartCard{
-      border:1px solid var(--border);
-      border-radius:14px;
-      background: rgba(255,255,255,.02);
-      padding:12px;
-    }
-    .chartWrap{
-      position:relative;
-      width:100%;
-      height:320px;
-    }
-    @media (max-width:760px){
-      .chartWrap{height:280px;}
-    }
-
-    @media print{
-      header{position:static; background:#fff; color:#000; border:none}
-      body{background:#fff; color:#000}
-      .card{box-shadow:none; background:#fff; border:1px solid #ccc}
-      .tab, .btn, .pill{display:none}
-      a{color:#000}
-    }
-  </style>
+<style>
+/* SAME STYLING AS INDEX */
+:root{
+  --bg:#070b16;
+  --card:rgba(18,26,51,.78);
+  --muted:#93a4c7;
+  --text:#e9eeff;
+  --accent:#7dd3fc;
+  --good:#34d399;
+  --warn:#fbbf24;
+  --bad:#fb7185;
+  --border:rgba(255,255,255,.10);
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+  --radius:16px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui;
+  background:var(--bg);
+  color:var(--text);
+}
+header{
+  background:#0c1530;
+  padding:16px;
+  border-bottom:1px solid var(--border);
+}
+.wrap{max-width:1100px;margin:auto;padding:20px}
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;
+  margin-bottom:16px;
+}
+input,select{
+  background:#0c1530;
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:8px;
+  border-radius:8px;
+}
+button{
+  padding:8px 14px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#1b2b55;
+  color:white;
+  cursor:pointer;
+}
+button.primary{background:#2563eb}
+button.danger{background:#dc2626}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.table{width:100%;border-collapse:collapse;margin-top:10px}
+.table td,.table th{padding:8px;border-bottom:1px solid var(--border);text-align:center}
+.badge{padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid var(--border)}
+.badge.good{color:var(--good)}
+.badge.bad{color:var(--bad)}
+.badge.warn{color:var(--warn)}
+.hidden{display:none}
+</style>
 </head>
 
 <body>
+
 <header>
-  <div class="wrap top">
-    <div class="brand">
-      <div class="crestWrap" aria-hidden="true" title="Berwick Tennis Club • Est. 1948">
-        <svg viewBox="0 0 200 200" width="38" height="38" aria-hidden="true">
-          <circle cx="100" cy="100" r="92" fill="none" stroke="#ffffff" stroke-width="6"/>
-          <circle cx="100" cy="100" r="78" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
-          <path d="M70 135 L135 70" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>
-          <path d="M70 70 L135 135" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>
-          <circle cx="100" cy="100" r="14" fill="#ffffff"/>
-          <text x="100" y="38" text-anchor="middle" fill="#ffffff" font-size="20" font-weight="800">TENNIS</text>
-          <text x="100" y="168" text-anchor="middle" fill="#ffffff" font-size="16" font-weight="700">EST. 1948</text>
-        </svg>
-      </div>
-      <div>
-        <h1>Berwick Tennis Club — Thursday Night Comp</h1>
-        <div class="sub">Autumn 2026 • 7 teams • 14 rounds • Navy & White</div>
-      </div>
-    </div>
-    <nav aria-label="Sections">
-      <button class="tab" data-view="home" aria-selected="true">Home</button>
-      <button class="tab" data-view="teams">Teams</button>
-      <button class="tab" data-view="fixtures">Fixtures</button>
-      <button class="tab" data-view="ladder">Ladder</button>
-      <button class="tab" data-view="finals">Finals</button>
-      <button class="tab" data-view="players">Player Stats</button>
-      <button class="tab" data-view="history">Match History 📊</button>
-      <button class="tab" data-view="rules">Rules</button>
-    </nav>
+  <div class="wrap">
+    <h2>Berwick Tennis Club — Admin Panel</h2>
+    <div style="color:var(--muted)">Thursday Night Competition</div>
   </div>
 </header>
 
-<main class="wrap">
-  <!-- HOME -->
-  <section id="view-home" class="view">
-    <div class="grid two">
-      <div class="card">
-        <div class="hd">
-          <div class="row" style="justify-content:space-between">
-            <h2 class="title">Next Round</h2>
-            <span class="pill"><span class="dot"></span><span id="nextRoundPill">Loading…</span></span>
-          </div>
-          <div class="muted" id="nextRoundDate" style="margin-top:4px"></div>
-        </div>
-        <div class="bd">
-          <div id="nextRoundMatches"></div>
-          <div class="foot">Results are loaded from the shared Google Sheet (read-only on this public site).</div>
-        </div>
-      </div>
+<div class="wrap">
 
-      <div class="card">
-        <div class="hd"><h2 class="title">Quick Stats</h2><div class="muted">Auto-updates from the shared results sheet</div></div>
-        <div class="bd">
-          <div class="kpi">
-            <div class="k"><div class="n" id="kpiRoundsDone">0</div><div class="l">Rounds completed</div></div>
-            <div class="k"><div class="n" id="kpiMatchesDone">0</div><div class="l">Matches recorded</div></div>
-            <div class="k"><div class="n" id="kpiTopTeam">—</div><div class="l">Current leader</div></div>
-            <div class="k"><div class="n" id="kpiTopPlayer">—</div><div class="l">Top player (sets won)</div></div>
-          </div>
-          <div style="margin-top:12px" class="row">
-            <button class="btn primary" id="btnPrint">Print</button>
-          </div>
-        </div>
-      </div>
+<!-- LOGIN -->
+<div class="card" id="loginCard">
+  <h3>Enter Admin Code</h3>
+  <div class="row">
+    <input type="password" id="adminCode" placeholder="Enter code" />
+    <button onclick="unlock()">Unlock</button>
+  </div>
+</div>
+
+<!-- ADMIN CONTENT -->
+<div id="adminContent" class="hidden">
+
+  <!-- Upload Scores -->
+  <div class="card">
+    <h3>Upload Scores</h3>
+
+    <div class="row">
+      <label>Round:</label>
+      <select id="roundSelect"></select>
+
+      <label>Match:</label>
+      <select id="matchSelect"></select>
     </div>
 
-    <div class="card" style="margin-top:14px">
-      <div class="hd"><h2 class="title">Latest Results</h2><div class="muted">Most recent uploaded matches</div></div>
-      <div class="bd" id="latestResults"></div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Pairing</th>
+          <th>Team A</th>
+          <th>Team B</th>
+        </tr>
+      </thead>
+      <tbody id="scoreBody"></tbody>
+    </table>
+
+    <div class="row" style="margin-top:15px">
+      <button class="primary" onclick="saveMatch()">Save Match</button>
+      <button onclick="clearMatch()">Clear Match</button>
+      <button class="danger" onclick="resetAll()">Reset All</button>
     </div>
-  </section>
+  </div>
 
-  <!-- TEAMS -->
-  <section id="view-teams" class="view" hidden>
-    <div class="card">
-      <div class="hd">
-        <h2 class="title">Teams & Players</h2>
-        <div class="muted">Player 1 = strongest • Player 4 = developing</div>
-      </div>
-      <div class="bd" id="teamsGrid"></div>
-    </div>
-  </section>
+</div>
 
-  <!-- FIXTURES -->
-  <section id="view-fixtures" class="view" hidden>
-    <div class="card">
-      <div class="hd">
-        <div class="row" style="justify-content:space-between">
-          <div>
-            <h2 class="title">Fixtures</h2>
-            <div class="muted">Rounds 1–14</div>
-          </div>
-          <div class="row">
-            <span class="hint">Jump to round:</span>
-            <select id="roundJump"></select>
-            <button class="btn" id="btnGo">Go</button>
-          </div>
-        </div>
-      </div>
-      <div class="bd" id="fixturesList"></div>
-    </div>
-  </section>
-
-  <!-- LADDER -->
-  <section id="view-ladder" class="view" hidden>
-    <div class="card">
-      <div class="hd"><h2 class="title">Ladder</h2><div class="muted">Tie-breakers: Points → Set Differential → Sets Won → Team #</div></div>
-      <div class="bd">
-        <div id="ladderTable"></div>
-        <div class="foot">Scoring: 1 point per set won + 2 bonus points if you win the night (no bonus on a tie).</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FINALS -->
-  <section id="view-finals" class="view" hidden>
-    <div class="grid two">
-      <div class="card">
-        <div class="hd">
-          <div class="row" style="justify-content:space-between">
-            <div>
-              <h2 class="title">Finals</h2>
-              <div class="muted">Auto-updates as standings change (Top 4)</div>
-            </div>
-            <span class="pill"><span class="dot"></span><span id="finalsStatusPill">Live standings</span></span>
-          </div>
-        </div>
-        <div class="bd">
-          <div id="finalsBracket"></div>
-          <div class="foot">Shows the current Top 4 based on the ladder. After Round 14 it becomes the final bracket.</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="hd"><h2 class="title">Finals Dates</h2><div class="muted">Edit in CONFIG</div></div>
-        <div class="bd">
-          <table>
-            <thead><tr><th>Stage</th><th>Date</th><th>Match</th></tr></thead>
-            <tbody>
-              <tr><td>Elimination</td><td id="dateElim">TBA</td><td>3rd vs 4th</td></tr>
-              <tr><td>Qualifying</td><td id="dateQual">TBA</td><td>1st vs 2nd</td></tr>
-              <tr><td>Preliminary</td><td id="datePrelim">TBA</td><td>Loser (1v2) vs Winner (3v4)</td></tr>
-              <tr><td>Grand Final</td><td id="dateGF">TBA</td><td>Winner (1v2) vs Winner (Prelim)</td></tr>
-            </tbody>
-          </table>
-          <div class="foot">Matchups update automatically from the ladder.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- PLAYER STATS -->
-  <section id="view-players" class="view" hidden>
-    <div class="card">
-      <div class="hd"><h2 class="title">Player Statistics</h2><div class="muted">Tracking <b>Sets Won</b> and <b>Games Won</b></div></div>
-      <div class="bd">
-        <div id="playerStatsTable"></div>
-        <div class="foot">Leaderboard sorts by Sets Won, then Games Won, then Win % (min 6 sets), then Sets Played.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- MATCH HISTORY -->
-  <section id="view-history" class="view" hidden>
-    <div class="grid two">
-      <div class="card">
-        <div class="hd">
-          <div class="row" style="justify-content:space-between">
-            <div>
-              <h2 class="title">Match History</h2>
-              <div class="muted">Per-team match log + points-over-time graph</div>
-            </div>
-            <span class="pill"><span class="dot"></span><span id="historyPill">Loading…</span></span>
-          </div>
-        </div>
-        <div class="bd">
-          <div class="row" style="margin-bottom:12px">
-            <span class="hint">Team:</span>
-            <select id="historyTeamSelect"></select>
-
-            <span class="badge" id="historyModeBadge">Single team</span>
-
-            <span class="spacer"></span>
-
-            <button class="btn" id="btnHistorySingle">Single team</button>
-            <button class="btn" id="btnHistoryAll">All teams</button>
-          </div>
-
-          <div class="chartCard">
-            <div class="row" style="justify-content:space-between; margin-bottom:8px">
-              <div class="muted" id="historyChartTitle">Team points over time (cumulative)</div>
-              <div class="hint">Auto updates when results are saved</div>
-            </div>
-            <div class="chartWrap">
-              <canvas id="historyChart"></canvas>
-            </div>
-          </div>
-
-          <div class="grid" style="grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px" id="historyKpis"></div>
-
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="hd">
-          <h2 class="title">Round-by-round</h2>
-          <div class="muted">Shows opponent, sets, total games and points for each round</div>
-        </div>
-        <div class="bd" id="historyTable"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- RULES -->
-  <section id="view-rules" class="view" hidden>
-    <div class="card">
-      <div class="hd"><h2 class="title">Rules</h2><div class="muted">Berwick Thursday Night Comp</div></div>
-      <div class="bd">
-        <ul style="margin:0; padding-left:18px; line-height:1.55">
-          <li>Each Thursday: <b>Team of 4</b> plays another <b>Team of 4</b>.</li>
-          <li>There are <b>6 doubles sets</b> in this order:</li>
-          <ul>
-            <li><b>1+2</b> vs <b>1+2</b></li>
-            <li><b>3+4</b> vs <b>3+4</b></li>
-            <li><b>1+3</b> vs <b>1+3</b></li>
-            <li><b>2+4</b> vs <b>2+4</b></li>
-            <li><b>1+4</b> vs <b>1+4</b></li>
-            <li><b>2+3</b> vs <b>2+3</b></li>
-          </ul>
-          <li>First team to <b>6 games</b> wins the set.</li>
-          <li>Night points: <b>1 point per set won</b> + <b>2 bonus points</b> if you win more sets overall.</li>
-          <li>If it’s tied on sets (3–3), <b>no bonus points</b> are awarded.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-</main>
+</div>
 
 <script>
-/* ============================================================
-   PUBLIC CONFIG — READ ONLY
-   ============================================================ */
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw8GVO1VqmhHyNhgoVr25lvkROu0D0lrqDA0RQqNQ0e3nxs8ZpJl_uXJe0XIvJjt-H1BQ/exec";
-const READ_KEY = "BTC1818";
 
-/* Finals dates (edit these) */
-const FINALS_DATES = {
-  elimination: "TBA",
-  qualifying: "TBA",
-  preliminary: "TBA",
-  grandFinal: "TBA"
-};
+/* CONFIG */
+const SHEETS_WEBAPP_URL =
+"https://script.google.com/macros/s/AKfycbw8GVO1VqmhHyNhgoVr25lvkROu0D0lrqDA0RQqNQ0e3nxs8ZpJl_uXJe0XIvJjt-H1BQ/exec";
 
-/* Teams */
+const WRITE_KEY = "BTC1818";
+
+/* TEAMS + ROUNDS (same structure as index) */
 const teams = {
-  1:{ name:"Team 1", players:["Cooper Khalil","Simran Chawla","David Sutton","Chris Maniatakis"] },
-  2:{ name:"Team 2", players:["Enrique Lopez","Craig Kitner","Josh Bury","Varun Sridhara"] },
-  3:{ name:"Team 3", players:["Michael Rominger","David Ng","Cameron Rush","Alan Chumacero"] },
-  4:{ name:"Team 4", players:["Jonathan Rogers","Rafa Bouzinelos","David Thurmond","Andrew Watson"] },
-  5:{ name:"Team 5", players:["Chung Tan","Huss Shafai","Tom Maloney","Brett Kurz"] },
-  6:{ name:"Team 6", players:["Vignesh Pakkiam","Eric Castricum","Stephen Saunders","Mark Findlay"] },
-  7:{ name:"Team 7", players:["Chris Scott","Justin Hermann","Nick Teo","Dishit Devasia"] },
+  1:["Cooper Khalil","Simran Chawla","David Sutton","Chris Maniatakis"],
+  2:["Enrique Lopez","Craig Kitner","Josh Bury","Varun Sridhara"],
+  3:["Michael Rominger","David Ng","Cameron Rush","Alan Chumacero"],
+  4:["Jonathan Rogers","Rafa Bouzinelos","David Thurmond","Andrew Watson"],
+  5:["Chung Tan","Huss Shafai","Tom Maloney","Brett Kurz"],
+  6:["Vignesh Pakkiam","Eric Castricum","Stephen Saunders","Mark Findlay"],
+  7:["Chris Scott","Justin Hermann","Nick Teo","Dishit Devasia"],
 };
 
-/* Fixtures */
 const rounds = [
-  { r:1,  date:"05-Feb-26", matches:[[1,6],[2,5],[3,4],[7,null]] },
-  { r:2,  date:"12-Feb-26", matches:[[4,2],[5,1],[6,7],[3,null]] },
-  { r:3,  date:"19-Feb-26", matches:[[2,7],[3,6],[4,5],[1,null]] },
-  { r:4,  date:"26-Feb-26", matches:[[5,3],[6,2],[7,1],[4,null]] },
-  { r:5,  date:"05-Mar-26", matches:[[3,1],[4,7],[5,6],[2,null]] },
-  { r:6,  date:"12-Mar-26", matches:[[6,4],[7,3],[1,2],[5,null]] },
-  { r:7,  date:"19-Mar-26", matches:[[7,5],[1,4],[2,3],[6,null]] },
-  { r:8,  date:"26-Mar-26", matches:[[1,6],[2,5],[3,4],[7,null]] },
-  { r:9,  date:"23-Apr-26", matches:[[4,2],[5,1],[6,7],[3,null]] },
-  { r:10, date:"30-Apr-26", matches:[[2,7],[3,6],[4,5],[1,null]] },
-  { r:11, date:"07-May-26", matches:[[5,3],[6,2],[7,1],[4,null]] },
-  { r:12, date:"14-May-26", matches:[[3,1],[4,7],[5,6],[2,null]] },
-  { r:13, date:"21-May-26", matches:[[6,4],[7,3],[1,2],[5,null]] },
-  { r:14, date:"28-May-26", matches:[[7,5],[1,4],[2,3],[6,null]] },
+  {r:1, matches:[[1,6],[2,5],[3,4],[7,null]]},
+  {r:2, matches:[[4,2],[5,1],[6,7],[3,null]]},
+  {r:3, matches:[[2,7],[3,6],[4,5],[1,null]]},
+  {r:4, matches:[[5,3],[6,2],[7,1],[4,null]]},
+  {r:5, matches:[[3,1],[4,7],[5,6],[2,null]]},
+  {r:6, matches:[[6,4],[7,3],[1,2],[5,null]]},
+  {r:7, matches:[[7,5],[1,4],[2,3],[6,null]]},
+  {r:8, matches:[[1,6],[2,5],[3,4],[7,null]]},
+  {r:9, matches:[[4,2],[5,1],[6,7],[3,null]]},
+  {r:10, matches:[[2,7],[3,6],[4,5],[1,null]]},
+  {r:11, matches:[[5,3],[6,2],[7,1],[4,null]]},
+  {r:12, matches:[[3,1],[4,7],[5,6],[2,null]]},
+  {r:13, matches:[[6,4],[7,3],[1,2],[5,null]]},
+  {r:14, matches:[[7,5],[1,4],[2,3],[6,null]]}
 ];
 
-/* Pairing order */
 const pairings = [
-  { key:"12", label:"1 + 2", a:[1,2], b:[1,2] },
-  { key:"34", label:"3 + 4", a:[3,4], b:[3,4] },
-  { key:"13", label:"1 + 3", a:[1,3], b:[1,3] },
-  { key:"24", label:"2 + 4", a:[2,4], b:[2,4] },
-  { key:"14", label:"1 + 4", a:[1,4], b:[1,4] },
-  { key:"23", label:"2 + 3", a:[2,3], b:[2,3] },
+  {key:"12", label:"1+2"},
+  {key:"34", label:"3+4"},
+  {key:"13", label:"1+3"},
+  {key:"24", label:"2+4"},
+  {key:"14", label:"1+4"},
+  {key:"23", label:"2+3"},
 ];
 
-/* ---------- State ---------- */
-let RESULTS = {}; // matchKey -> record (loaded from Google Sheet)
+let unlocked = false;
 
-/* History page state */
-let HISTORY_MODE = "single"; // "single" | "all"
-let historyChartInstance = null;
-
-/* ---------- Helpers ---------- */
-const $ = (sel)=>document.querySelector(sel);
-const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
-function escapeHtml_(s){
-  return String(s).replace(/[&<>"']/g, (c)=>({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
-  }[c]));
-}
-function matchId(roundNum, matchIndex){ return `r${roundNum}_m${matchIndex}`; }
-function teamName(id){ return teams[id]?.name ?? `Team ${id}`; }
-
-/* ---------- Cloud API (READ ONLY) ---------- */
-function cloudReady_(){
-  return SHEETS_WEBAPP_URL && !SHEETS_WEBAPP_URL.includes("PASTE_YOUR_WEB_APP_URL");
-}
-
-async function cloudDump_(){
-  const url = new URL(SHEETS_WEBAPP_URL);
-  url.searchParams.set("action","dump");
-  url.searchParams.set("key", READ_KEY);
-
-  const res = await fetch(url.toString(), { method:"GET" });
-  if (!res.ok) throw new Error("Could not load from Google Sheets (dump).");
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || "Dump failed.");
-  return json.results || {};
-}
-
-/* ---------- Team chip popover ---------- */
-function teamChipHTML(teamId){
-  if (teamId == null) return `<span class="badge">Bye</span>`;
-  const t = teams[teamId];
-  const players = t.players.map((p,i)=>(
-    `<div class="p"><span class="rank">#${i+1}</span><span class="name">${escapeHtml_(p)}</span></div>`
-  )).join("");
-  return `
-    <span class="team-chip" data-team-chip="${teamId}">
-      ${escapeHtml_(t.name)}
-      <span class="team-pop" role="dialog" aria-label="${escapeHtml_(t.name)} players">
-        <div class="hdr">
-          <b>${escapeHtml_(t.name)}</b>
-          <button class="closex" type="button" data-close-pop="1">Close</button>
-        </div>
-        ${players}
-      </span>
-    </span>
-  `;
-}
-function attachTeamChipHandlers_(){
-  document.addEventListener("click", (e)=>{
-    const chip = e.target.closest?.(".team-chip");
-    if (!chip){
-      $$(".team-chip[data-open='true']").forEach(c=>c.removeAttribute("data-open"));
-    }
-  }, {capture:true});
-  $$(".team-chip").forEach(chip=>{
-    chip.addEventListener("click", (e)=>{
-      const closeBtn = e.target.closest?.("[data-close-pop]");
-      if (closeBtn){
-        chip.removeAttribute("data-open");
-        e.stopPropagation();
-        return;
-      }
-      if (window.matchMedia("(max-width: 760px)").matches){
-        const open = chip.getAttribute("data-open") === "true";
-        $$(".team-chip[data-open='true']").forEach(c=>c.removeAttribute("data-open"));
-        if (!open) chip.setAttribute("data-open","true");
-        e.stopPropagation();
-      }
-    });
-  });
-}
-
-/* ---------- Scoring helpers (for stats) ---------- */
-function calcNightPoints(aSets, bSets){
-  aSets = Number(aSets)||0; bSets = Number(bSets)||0;
-  let aPts = aSets, bPts = bSets;
-  if (aSets > bSets) aPts += 2;
-  else if (bSets > aSets) bPts += 2;
-  return {aPts, bPts};
-}
-function decideSetWinner(aGames, bGames){
-  aGames = Number(aGames); bGames = Number(bGames);
-  if (!Number.isFinite(aGames) || !Number.isFinite(bGames)) return {winner: null, status:"empty"};
-  if (aGames === 6 && bGames !== 6) return {winner:"A", status:"ok"};
-  if (bGames === 6 && aGames !== 6) return {winner:"B", status:"ok"};
-  if ((aGames >= 6 || bGames >= 6) && aGames !== bGames){
-    return {winner: (aGames > bGames ? "A":"B"), status:"warn"};
-  }
-  return {winner: null, status:"warn"};
-}
-
-/* ---------- Ladder ---------- */
-function buildLadder(){
-  const base = {};
-  Object.keys(teams).forEach(id=>{
-    base[id] = { teamId:Number(id), played:0, points:0, setsWon:0, setsLost:0, nightsWon:0, nightsLost:0, nightsTied:0 };
-  });
-
-  for (const m of Object.values(RESULTS)){
-    if (!m || m.a == null || m.b == null) continue;
-    const A = base[m.a], B = base[m.b];
-    if (!A || !B) continue;
-
-    A.played++; B.played++;
-    A.points += Number(m.aPts)||0;
-    B.points += Number(m.bPts)||0;
-
-    A.setsWon += Number(m.aSets)||0;
-    A.setsLost += Number(m.bSets)||0;
-    B.setsWon += Number(m.bSets)||0;
-    B.setsLost += Number(m.aSets)||0;
-
-    if (m.aSets > m.bSets){ A.nightsWon++; B.nightsLost++; }
-    else if (m.bSets > m.aSets){ B.nightsWon++; A.nightsLost++; }
-    else { A.nightsTied++; B.nightsTied++; }
-  }
-
-  const rows = Object.values(base);
-  rows.sort((x,y)=>{
-    const p = y.points - x.points; if (p) return p;
-    const sd = (y.setsWon - y.setsLost) - (x.setsWon - x.setsLost); if (sd) return sd;
-    const sw = y.setsWon - x.setsWon; if (sw) return sw;
-    return x.teamId - y.teamId;
-  });
-  return rows;
-}
-
-/* ---------- Player stats (Sets Won + Games Won) ---------- */
-function buildPlayerStats(){
-  const stats = new Map();
-  for (const [tid, t] of Object.entries(teams)){
-    t.players.forEach(p=>stats.set(p, {
-      name:p, teamId:Number(tid),
-      setsWon:0, setsPlayed:0,
-      gamesWon:0, gamesPlayed:0
-    }));
-  }
-
-  for (const m of Object.values(RESULTS)){
-    if (!m || m.a == null || m.b == null) continue;
-    if (!m.pairs) continue;
-
-    const teamA = teams[m.a], teamB = teams[m.b];
-
-    for (const pr of pairings){
-      const res = m.pairs[pr.key];
-      if (!res) continue;
-
-      const aG = Number(res.a);
-      const bG = Number(res.b);
-      if (!Number.isFinite(aG) || !Number.isFinite(bG)) continue;
-
-      const d = decideSetWinner(aG, bG);
-      if (!d.winner) continue;
-
-      const aPlayers = pr.a.map(n=>teamA.players[n-1]);
-      const bPlayers = pr.b.map(n=>teamB.players[n-1]);
-
-      for (const p of aPlayers){
-        const s = stats.get(p);
-        s.gamesPlayed += (aG + bG);
-        s.gamesWon += aG;
-        s.setsPlayed += 1;
-        if (d.winner === "A") s.setsWon += 1;
-      }
-      for (const p of bPlayers){
-        const s = stats.get(p);
-        s.gamesPlayed += (aG + bG);
-        s.gamesWon += bG;
-        s.setsPlayed += 1;
-        if (d.winner === "B") s.setsWon += 1;
-      }
-    }
-  }
-
-  const rows = Array.from(stats.values()).map(s=>({
-    ...s,
-    winPct: s.setsPlayed ? (s.setsWon / s.setsPlayed) : 0,
-    gamesPct: s.gamesPlayed ? (s.gamesWon / s.gamesPlayed) : 0
-  }));
-
-  rows.sort((a,b)=>{
-    const sw = b.setsWon - a.setsWon; if (sw) return sw;
-    const gw = b.gamesWon - a.gamesWon; if (gw) return gw;
-    const aQ = a.setsPlayed >= 6, bQ = b.setsPlayed >= 6;
-    if (aQ !== bQ) return (bQ ? 1 : -1);
-    const wp = b.winPct - a.winPct; if (wp) return wp;
-    const sp = b.setsPlayed - a.setsPlayed; if (sp) return sp;
-    return a.name.localeCompare(b.name);
-  });
-
-  return rows;
-}
-
-/* ---------- Finals ---------- */
-function renderFinals(){
-  $("#dateElim").textContent = FINALS_DATES.elimination || "TBA";
-  $("#dateQual").textContent = FINALS_DATES.qualifying || "TBA";
-  $("#datePrelim").textContent = FINALS_DATES.preliminary || "TBA";
-  $("#dateGF").textContent = FINALS_DATES.grandFinal || "TBA";
-
-  const ladder = buildLadder();
-  const top4 = ladder.slice(0,4).map(x=>x.teamId);
-  const [t1,t2,t3,t4] = top4;
-
-  const round14 = rounds.find(r=>r.r===14);
-  let round14Complete = true;
-  if (round14){
-    for (let i=0;i<round14.matches.length;i++){
-      const [a,b] = round14.matches[i];
-      if (b == null) continue;
-      const id = matchId(14, i);
-      if (!RESULTS[id]) { round14Complete = false; break; }
-    }
-  } else round14Complete = false;
-
-  $("#finalsStatusPill").textContent = round14Complete ? "Locked (after Round 14)" : "Live standings";
-
-  $("#finalsBracket").innerHTML = `
-    <div class="bracket">
-      <div class="stage">
-        <b>Qualifying (1st vs 2nd)</b>
-        <div class="subline">${escapeHtml_(FINALS_DATES.qualifying || "TBA")}</div>
-        <div class="match">${t1?teamChipHTML(t1):`<span class="badge warn">TBA</span>`} <span class="muted">vs</span> ${t2?teamChipHTML(t2):`<span class="badge warn">TBA</span>`}</div>
-        <div class="subline">Winner → Grand Final • Loser → Preliminary</div>
-      </div>
-
-      <div class="stage">
-        <b>Elimination (3rd vs 4th)</b>
-        <div class="subline">${escapeHtml_(FINALS_DATES.elimination || "TBA")}</div>
-        <div class="match">${t3?teamChipHTML(t3):`<span class="badge warn">TBA</span>`} <span class="muted">vs</span> ${t4?teamChipHTML(t4):`<span class="badge warn">TBA</span>`}</div>
-        <div class="subline">Loser eliminated • Winner → Preliminary</div>
-      </div>
-
-      <div class="stage">
-        <b>Preliminary</b>
-        <div class="subline">${escapeHtml_(FINALS_DATES.preliminary || "TBA")}</div>
-        <div class="match"><span class="muted">Loser (1v2)</span> <span class="muted">vs</span> <span class="muted">Winner (3v4)</span></div>
-      </div>
-
-      <div class="stage">
-        <b>Grand Final</b>
-        <div class="subline">${escapeHtml_(FINALS_DATES.grandFinal || "TBA")}</div>
-        <div class="match"><span class="muted">Winner (1v2)</span> <span class="muted">vs</span> <span class="muted">Winner (Prelim)</span></div>
-      </div>
-
-      <div class="muted" style="font-size:12px">
-        Current Top 4:
-        ${top4.map((tid,idx)=>`<span class="badge">${idx+1}</span> ${teamChipHTML(tid)}`).join(" • ")}
-      </div>
-    </div>
-  `;
-  attachTeamChipHandlers_();
-}
-
-/* ---------- Render: Home ---------- */
-function getNextRound(){
-  for (const round of rounds){
-    let allDone = true;
-    for (let i=0;i<round.matches.length;i++){
-      const [a,b] = round.matches[i];
-      if (b == null) continue;
-      const id = matchId(round.r, i);
-      if (!RESULTS[id]) { allDone = false; break; }
-    }
-    if (!allDone) return round;
-  }
-  return null;
-}
-
-function renderHome(){
-  const next = getNextRound();
-  if (!next){
-    $("#nextRoundPill").textContent = "Season complete";
-    $("#nextRoundDate").textContent = "";
-    $("#nextRoundMatches").innerHTML = `<div class="muted">All rounds have results.</div>`;
+/* LOGIN */
+function unlock(){
+  if(document.getElementById("adminCode").value === WRITE_KEY){
+    unlocked = true;
+    document.getElementById("loginCard").style.display="none";
+    document.getElementById("adminContent").classList.remove("hidden");
+    initAdmin();
   } else {
-    $("#nextRoundPill").textContent = `Round ${next.r}`;
-    $("#nextRoundDate").textContent = next.date;
-    $("#nextRoundMatches").innerHTML = next.matches.map((m,idx)=>{
-      const [a,b] = m;
-      if (b == null) return `
-        <div class="row" style="justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border)">
-          <div>${teamChipHTML(a)}</div><div class="muted">Bye</div>
-        </div>`;
-      const id = matchId(next.r, idx);
-      const res = RESULTS[id];
-      const summary = res ? `${res.aSets}–${res.bSets} (pts ${res.aPts}–${res.bPts})` : "Not played";
-      return `
-        <div class="row" style="justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border)">
-          <div>${teamChipHTML(a)} <span class="muted">vs</span> ${teamChipHTML(b)}</div>
-          <div class="muted">${summary}</div>
-        </div>`;
-    }).join("");
-  }
-
-  const latest = Object.entries(RESULTS)
-    .map(([k,v])=>({k,v}))
-    .filter(x=>x.v && x.v.a!=null && x.v.b!=null)
-    .sort((x,y)=>(y.v.ts||0)-(x.v.ts||0))
-    .slice(0,6);
-
-  if (!latest.length){
-    $("#latestResults").innerHTML = `<div class="muted">No results uploaded yet.</div>`;
-  } else {
-    $("#latestResults").innerHTML = `
-      <table>
-        <thead><tr><th>Round</th><th>Match</th><th class="right">Sets</th><th class="right">Points</th><th class="right">Total Games</th></tr></thead>
-        <tbody>
-          ${latest.map(x=>{
-            const [rPart] = x.k.split("_");
-            const r = Number(rPart.replace("r",""));
-            const date = rounds.find(rr=>rr.r===r)?.date ?? "";
-            const m = x.v;
-            return `
-              <tr>
-                <td>R${r} <span class="muted">${date}</span></td>
-                <td>${teamChipHTML(m.a)} <span class="muted">vs</span> ${teamChipHTML(m.b)}</td>
-                <td class="right"><b>${m.aSets}–${m.bSets}</b></td>
-                <td class="right"><span class="muted">${m.aPts}–${m.bPts}</span></td>
-                <td class="right"><span class="muted">${m.aGamesTotal||0}–${m.bGamesTotal||0}</span></td>
-              </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
-    `;
-    attachTeamChipHandlers_();
+    alert("Wrong code");
   }
 }
 
-/* ---------- Render: Teams ---------- */
-function renderTeams(){
-  const ids = Object.keys(teams).map(Number).sort((a,b)=>a-b);
-  $("#teamsGrid").innerHTML = `
-    <div class="grid" style="grid-template-columns:repeat(2,1fr); gap:14px">
-      ${ids.map(id=>{
-        const t = teams[id];
-        return `
-          <div class="card" style="background:rgba(255,255,255,.03); box-shadow:none; border-radius:14px">
-            <div class="bd">
-              <div class="badge">Team ${id}</div>
-              <h3 class="title" style="margin:10px 0 0">${escapeHtml_(t.name)}</h3>
-              <div style="margin-top:10px">
-                ${t.players.map((p,i)=>`
-                  <div class="row" style="justify-content:space-between">
-                    <span class="muted">Player ${i+1}</span><span>${escapeHtml_(p)}</span>
-                  </div>`).join("")}
-              </div>
-            </div>
-          </div>
-        `;
-      }).join("")}
-    </div>
-  `;
-}
-
-/* ---------- Render: Fixtures ---------- */
-function renderFixtures(){
-  const host = $("#fixturesList");
-  host.innerHTML = "";
-  for (const round of rounds){
-    const rows = round.matches.map((m, idx)=>{
-      const [a,b] = m;
-      const id = matchId(round.r, idx);
-      const res = RESULTS[id];
-      const badge = !b ? `<span class="badge">Bye</span>` :
-        (res ? `<span class="badge good">Recorded</span>` : `<span class="badge">Not played</span>`);
-      const summary = (!b) ? "—" : (res ? `${res.aSets}–${res.bSets} (pts ${res.aPts}–${res.bPts})` : "—");
-      return `
-        <tr>
-          <td>${teamChipHTML(a)}</td>
-          <td class="center">${b ? "vs" : "—"}</td>
-          <td>${b ? teamChipHTML(b) : `<span class="muted">Bye</span>`}</td>
-          <td class="right">${badge} <span class="muted" style="margin-left:8px">${summary}</span></td>
-        </tr>
-      `;
-    }).join("");
-
-    host.insertAdjacentHTML("beforeend", `
-      <div class="card" id="round-${round.r}" style="background:rgba(255,255,255,.02); box-shadow:none; border-radius:14px; margin-bottom:14px">
-        <div class="bd">
-          <div class="row" style="justify-content:space-between; margin-bottom:10px">
-            <div>
-              <div class="badge">Round ${round.r}</div>
-              <div class="muted" style="margin-top:6px">${round.date}</div>
-            </div>
-            <span class="badge">Public view</span>
-          </div>
-          <table>
-            <thead><tr><th>Team A</th><th class="center"></th><th>Team B</th><th class="right">Result</th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      </div>
-    `);
-  }
-  attachTeamChipHandlers_();
-}
-
-/* ---------- Render: Ladder ---------- */
-function renderLadder(){
-  const ladder = buildLadder();
-  $("#ladderTable").innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th class="right">#</th>
-          <th>Team</th>
-          <th class="right">P</th>
-          <th class="right">Pts</th>
-          <th class="right">Sets W</th>
-          <th class="right">Sets L</th>
-          <th class="right">Set Diff</th>
-          <th class="right">Nights W</th>
-          <th class="right">Nights L</th>
-          <th class="right">Tied</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${ladder.map((row, i)=>{
-          const diff = row.setsWon - row.setsLost;
-          return `
-            <tr>
-              <td class="right">${i+1}</td>
-              <td>${teamChipHTML(row.teamId)}</td>
-              <td class="right">${row.played}</td>
-              <td class="right"><b>${row.points}</b></td>
-              <td class="right">${row.setsWon}</td>
-              <td class="right">${row.setsLost}</td>
-              <td class="right">${diff}</td>
-              <td class="right">${row.nightsWon}</td>
-              <td class="right">${row.nightsLost}</td>
-              <td class="right">${row.nightsTied}</td>
-            </tr>
-          `;
-        }).join("")}
-      </tbody>
-    </table>
-  `;
-  attachTeamChipHandlers_();
-
-  const matchCount = Object.values(RESULTS).filter(m=>m && m.a!=null && m.b!=null).length;
-  const roundsDone = new Set(Object.keys(RESULTS).map(k=>k.split("_")[0])).size;
-  $("#kpiRoundsDone").textContent = String(roundsDone);
-  $("#kpiMatchesDone").textContent = String(matchCount);
-
-  const leader = ladder[0]?.teamId;
-  $("#kpiTopTeam").textContent = leader ? `Team ${leader}` : "—";
-
-  const players = buildPlayerStats();
-  $("#kpiTopPlayer").textContent = players[0]?.name ?? "—";
-}
-
-/* ---------- Render: Player stats ---------- */
-function renderPlayerStats(){
-  const rows = buildPlayerStats();
-  $("#playerStatsTable").innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th>Player</th>
-          <th>Team</th>
-          <th class="right">Sets Won</th>
-          <th class="right">Sets Played</th>
-          <th class="right">Win %</th>
-          <th class="right">Games Won</th>
-          <th class="right">Games Played</th>
-          <th class="right">Games %</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows.map(r=>{
-          const pct = r.setsPlayed ? (r.winPct*100).toFixed(1) : "0.0";
-          const gPct = r.gamesPlayed ? (r.gamesPct*100).toFixed(1) : "0.0";
-          const badge = r.setsPlayed < 6 ? `<span class="badge warn" title="Small sample size">&lt;6 sets</span>` : "";
-          return `
-            <tr>
-              <td>${escapeHtml_(r.name)} ${badge}</td>
-              <td>${teamChipHTML(r.teamId)}</td>
-              <td class="right"><b>${r.setsWon}</b></td>
-              <td class="right">${r.setsPlayed}</td>
-              <td class="right">${pct}%</td>
-              <td class="right"><b>${r.gamesWon}</b></td>
-              <td class="right">${r.gamesPlayed}</td>
-              <td class="right">${gPct}%</td>
-            </tr>
-          `;
-        }).join("")}
-      </tbody>
-    </table>
-  `;
-  attachTeamChipHandlers_();
-}
-
-/* ---------- Match History ---------- */
-function populateHistoryTeams_(){
-  const sel = $("#historyTeamSelect");
-  if (!sel) return;
-
-  const prev = sel.value || "1";
-  sel.innerHTML = "";
-
-  Object.keys(teams).map(Number).sort((a,b)=>a-b).forEach(tid=>{
-    const opt = document.createElement("option");
-    opt.value = String(tid);
-    opt.textContent = `${teamName(tid)}`;
-    sel.appendChild(opt);
-  });
-
-  sel.value = prev;
-}
-
-function findMatchForTeamInRound_(teamId, round){
-  for (let idx=0; idx<round.matches.length; idx++){
-    const [a,b] = round.matches[idx];
-    if (b == null) continue;
-    if (a === teamId || b === teamId){
-      const id = matchId(round.r, idx);
-      const record = RESULTS[id] || null;
-      return { idx, a, b, id, record };
-    }
-  }
-  return null;
-}
-
-function buildTeamHistory_(teamId){
-  const rows = [];
-  let cumPts = 0;
-  let cumSetsW = 0, cumSetsL = 0;
-  let cumGamesW = 0, cumGamesL = 0;
-
-  for (const round of rounds){
-    const found = findMatchForTeamInRound_(teamId, round);
-    if (!found){
-      rows.push({
-        round: round.r,
-        date: round.date,
-        status: "Bye",
-        opponent: null,
-        points: 0,
-        sets: null,
-        games: null,
-        cumPts,
-        cumSetsW, cumSetsL,
-        cumGamesW, cumGamesL,
-        played: false
-      });
-      continue;
-    }
-
-    const opp = (found.a === teamId) ? found.b : found.a;
-    const rec = found.record;
-
-    if (!rec){
-      rows.push({
-        round: round.r,
-        date: round.date,
-        status: "Not played",
-        opponent: opp,
-        points: 0,
-        sets: null,
-        games: null,
-        cumPts,
-        cumSetsW, cumSetsL,
-        cumGamesW, cumGamesL,
-        played: false
-      });
-      continue;
-    }
-
-    const isA = (rec.a === teamId);
-    const pts = isA ? (Number(rec.aPts)||0) : (Number(rec.bPts)||0);
-    const setsW = isA ? (Number(rec.aSets)||0) : (Number(rec.bSets)||0);
-    const setsL = isA ? (Number(rec.bSets)||0) : (Number(rec.aSets)||0);
-    const gamesW = isA ? (Number(rec.aGamesTotal)||0) : (Number(rec.bGamesTotal)||0);
-    const gamesL = isA ? (Number(rec.bGamesTotal)||0) : (Number(rec.aGamesTotal)||0);
-
-    cumPts += pts;
-    cumSetsW += setsW; cumSetsL += setsL;
-    cumGamesW += gamesW; cumGamesL += gamesL;
-
-    const status = (setsW > setsL) ? "Won night" : (setsW < setsL) ? "Lost night" : "Tied night";
-
-    rows.push({
-      round: round.r,
-      date: round.date,
-      status,
-      opponent: opp,
-      points: pts,
-      sets: { w: setsW, l: setsL },
-      games: { w: gamesW, l: gamesL },
-      cumPts,
-      cumSetsW, cumSetsL,
-      cumGamesW, cumGamesL,
-      played: true
-    });
-  }
-
-  return rows;
-}
-
-function renderHistoryKpis_(teamId){
-  const rows = buildTeamHistory_(teamId);
-  const playedRows = rows.filter(r=>r.played);
-  const lastPlayed = [...playedRows].reverse()[0] || null;
-
-  let nightsW = 0, nightsL = 0, nightsT = 0;
-  for (const r of playedRows){
-    if (r.sets && r.sets.w > r.sets.l) nightsW++;
-    else if (r.sets && r.sets.w < r.sets.l) nightsL++;
-    else nightsT++;
-  }
-
-  const totalPts = playedRows.length ? playedRows[playedRows.length-1].cumPts : 0;
-  const totalSetsW = playedRows.length ? playedRows[playedRows.length-1].cumSetsW : 0;
-  const totalSetsL = playedRows.length ? playedRows[playedRows.length-1].cumSetsL : 0;
-
-  const host = $("#historyKpis");
-  host.innerHTML = `
-    <div class="k"><div class="n">${totalPts}</div><div class="l">Points (cumulative)</div></div>
-    <div class="k"><div class="n">${nightsW}-${nightsL}-${nightsT}</div><div class="l">Nights W-L-T</div></div>
-    <div class="k"><div class="n">${totalSetsW}–${totalSetsL}</div><div class="l">Sets (W–L)</div></div>
-  `;
-
-  $("#historyPill").textContent = lastPlayed ? `Last: R${lastPlayed.round} (${lastPlayed.status})` : "No results yet";
-}
-
-function renderHistoryTable_(teamId){
-  const rows = buildTeamHistory_(teamId);
-
-  $("#historyTable").innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th class="right">Round</th>
-          <th>Date</th>
-          <th>Opponent</th>
-          <th>Status</th>
-          <th class="right">Sets</th>
-          <th class="right">Games</th>
-          <th class="right">Pts</th>
-          <th class="right">Cum Pts</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows.map(r=>{
-          const oppCell = r.opponent ? teamChipHTML(r.opponent) : `<span class="muted">—</span>`;
-          const setsCell = r.sets ? `<b>${r.sets.w}–${r.sets.l}</b>` : `<span class="muted">—</span>`;
-          const gamesCell = r.games ? `<span class="muted">${r.games.w}–${r.games.l}</span>` : `<span class="muted">—</span>`;
-
-          let badge = `<span class="badge">—</span>`;
-          if (r.status === "Won night") badge = `<span class="badge good">Won</span>`;
-          else if (r.status === "Lost night") badge = `<span class="badge bad">Lost</span>`;
-          else if (r.status === "Tied night") badge = `<span class="badge warn">Tied</span>`;
-          else if (r.status === "Not played") badge = `<span class="badge">Not played</span>`;
-          else if (r.status === "Bye") badge = `<span class="badge">Bye</span>`;
-
-          return `
-            <tr>
-              <td class="right">R${r.round}</td>
-              <td><span class="muted">${escapeHtml_(r.date)}</span></td>
-              <td>${oppCell}</td>
-              <td>${badge}</td>
-              <td class="right">${setsCell}</td>
-              <td class="right">${gamesCell}</td>
-              <td class="right"><b>${r.points}</b></td>
-              <td class="right"><b>${r.cumPts}</b></td>
-            </tr>
-          `;
-        }).join("")}
-      </tbody>
-    </table>
-  `;
-  attachTeamChipHandlers_();
-}
-
-function destroyHistoryChart_(){
-  if (historyChartInstance){
-    historyChartInstance.destroy();
-    historyChartInstance = null;
-  }
-}
-
-function renderHistoryChartSingle_(teamId){
-  const rows = buildTeamHistory_(teamId);
-  const labels = rows.map(r=>`R${r.round}`);
-  const cumPts = rows.map(r=>r.cumPts);
-
-  destroyHistoryChart_();
-  const ctx = $("#historyChart").getContext("2d");
-
-  historyChartInstance = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels,
-      datasets: [{
-        label: `${teamName(teamId)} — cumulative points`,
-        data: cumPts,
-        tension: 0.25,
-        pointRadius: 3
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: "#e9eeff" } },
-        tooltip: { enabled: true }
-      },
-      scales: {
-        x: { ticks: { color: "#93a4c7" }, grid: { color: "rgba(255,255,255,.08)" } },
-        y: { ticks: { color: "#93a4c7" }, grid: { color: "rgba(255,255,255,.08)" }, beginAtZero: true }
-      }
-    }
-  });
-
-  $("#historyModeBadge").textContent = "Single team";
-  $("#historyChartTitle").textContent = "Team points over time (cumulative)";
-}
-
-function renderHistoryChartAll_(){
-  const labels = rounds.map(r=>`R${r.r}`);
-  const datasets = Object.keys(teams).map(Number).sort((a,b)=>a-b).map(tid=>{
-    const rows = buildTeamHistory_(tid);
-    return {
-      label: `${teamName(tid)}`,
-      data: rows.map(r=>r.cumPts),
-      tension: 0.25,
-      pointRadius: 2
-    };
-  });
-
-  destroyHistoryChart_();
-  const ctx = $("#historyChart").getContext("2d");
-
-  historyChartInstance = new Chart(ctx, {
-    type: "line",
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: "#e9eeff" } },
-        tooltip: { enabled: true }
-      },
-      scales: {
-        x: { ticks: { color: "#93a4c7" }, grid: { color: "rgba(255,255,255,.08)" } },
-        y: { ticks: { color: "#93a4c7" }, grid: { color: "rgba(255,255,255,.08)" }, beginAtZero: true }
-      }
-    }
-  });
-
-  $("#historyModeBadge").textContent = "All teams";
-  $("#historyChartTitle").textContent = "All teams — cumulative points over time";
-}
-
-function renderHistory(){
-  populateHistoryTeams_();
-
-  const sel = $("#historyTeamSelect");
-  const defaultTeam = sel.value ? Number(sel.value) : 1;
-
-  if (HISTORY_MODE === "all"){
-    renderHistoryChartAll_();
-    renderHistoryKpis_(defaultTeam);
-    renderHistoryTable_(defaultTeam);
-  } else {
-    renderHistoryKpis_(defaultTeam);
-    renderHistoryTable_(defaultTeam);
-    renderHistoryChartSingle_(defaultTeam);
-  }
-
-  sel.onchange = ()=>{
-    const tid = Number(sel.value);
-    renderHistoryKpis_(tid);
-    renderHistoryTable_(tid);
-    if (HISTORY_MODE === "single") renderHistoryChartSingle_(tid);
-  };
-
-  $("#btnHistorySingle").onclick = ()=>{
-    HISTORY_MODE = "single";
-    const tid = Number($("#historyTeamSelect").value);
-    renderHistoryKpis_(tid);
-    renderHistoryTable_(tid);
-    renderHistoryChartSingle_(tid);
-  };
-  $("#btnHistoryAll").onclick = ()=>{
-    HISTORY_MODE = "all";
-    const tid = Number($("#historyTeamSelect").value);
-    renderHistoryChartAll_();
-    renderHistoryKpis_(tid);
-    renderHistoryTable_(tid);
-  };
-}
-
-/* ---------- Re-render helper ---------- */
-function rerenderAll_(){
-  renderHome();
-  renderFixtures();
-  renderLadder();
-  renderFinals();
-  renderPlayerStats();
-  const historyVisible = !$("#view-history").hidden;
-  if (historyVisible) renderHistory();
-}
-
-/* ---------- Navigation ---------- */
-function setView(name){
-  $$(".tab").forEach(t=>t.setAttribute("aria-selected", String(t.dataset.view===name)));
-  $$(".view").forEach(v=>v.hidden = true);
-  $(`#view-${name}`).hidden = false;
-
-  if (name==="home"){ renderHome(); renderLadder(); renderFinals(); }
-  if (name==="teams"){ renderTeams(); attachTeamChipHandlers_(); }
-  if (name==="fixtures"){ renderFixtures(); }
-  if (name==="ladder"){ renderLadder(); renderFinals(); }
-  if (name==="finals"){ renderFinals(); }
-  if (name==="players"){ renderPlayerStats(); }
-  if (name==="history"){ renderHistory(); }
-}
-
-/* ---------- Init ---------- */
-function init(){
-  $$(".tab").forEach(btn=>btn.addEventListener("click", ()=>setView(btn.dataset.view)));
-
-  // Round jump
-  const rj = $("#roundJump");
-  rj.innerHTML = "";
+/* INIT */
+function initAdmin(){
+  const rs = document.getElementById("roundSelect");
   rounds.forEach(r=>{
     const opt = document.createElement("option");
-    opt.value = String(r.r);
-    opt.textContent = `Round ${r.r}`;
-    rj.appendChild(opt);
-  });
-  $("#btnGo").addEventListener("click", ()=>{
-    const r = Number($("#roundJump").value);
-    const el = document.getElementById(`round-${r}`);
-    if (el) el.scrollIntoView({behavior:"smooth", block:"start"});
+    opt.value = r.r;
+    opt.textContent = "Round " + r.r;
+    rs.appendChild(opt);
   });
 
-  $("#btnPrint").addEventListener("click", ()=>window.print());
-
-  // Load from sheet (read-only)
-  (async ()=>{
-    try{
-      if (!cloudReady_()) throw new Error("Missing web app URL");
-      RESULTS = await cloudDump_();
-    } catch (e){
-      console.error(e);
-      RESULTS = {};
-    } finally {
-      renderTeams();
-      renderFixtures();
-      renderLadder();
-      renderFinals();
-      renderPlayerStats();
-      renderHome();
-      setView("home");
-    }
-  })();
+  rs.onchange = updateMatchSelect;
+  updateMatchSelect();
 }
-init();
+
+/* MATCH SELECT */
+function updateMatchSelect(){
+  const r = Number(document.getElementById("roundSelect").value);
+  const round = rounds.find(x=>x.r===r);
+
+  const ms = document.getElementById("matchSelect");
+  ms.innerHTML="";
+  round.matches.forEach((m,i)=>{
+    if(m[1]==null) return;
+    const opt=document.createElement("option");
+    opt.value=i;
+    opt.textContent=`Match ${i+1} (${m[0]} vs ${m[1]})`;
+    ms.appendChild(opt);
+  });
+
+  ms.onchange = renderScoreSheet;
+  renderScoreSheet();
+}
+
+/* SCORE ENTRY */
+function renderScoreSheet(){
+  const r = Number(document.getElementById("roundSelect").value);
+  const mIndex = Number(document.getElementById("matchSelect").value);
+  const match = rounds.find(x=>x.r===r).matches[mIndex];
+
+  const body=document.getElementById("scoreBody");
+  body.innerHTML="";
+
+  pairings.forEach(p=>{
+    body.innerHTML += `
+      <tr>
+        <td>${p.label}</td>
+        <td><input type="number" min="0" max="7" data-pair="${p.key}" data-side="a"></td>
+        <td><input type="number" min="0" max="7" data-pair="${p.key}" data-side="b"></td>
+      </tr>
+    `;
+  });
+}
+
+/* SAVE */
+async function saveMatch(){
+  const r = Number(document.getElementById("roundSelect").value);
+  const mIndex = Number(document.getElementById("matchSelect").value);
+  const match = rounds.find(x=>x.r===r).matches[mIndex];
+  const [a,b]=match;
+
+  const inputs=document.querySelectorAll("input[data-pair]");
+  const pairs={};
+  let aSets=0,bSets=0,aGamesTotal=0,bGamesTotal=0;
+
+  pairings.forEach(p=>{
+    const aG = Number(document.querySelector(`input[data-pair="${p.key}"][data-side="a"]`).value||0);
+    const bG = Number(document.querySelector(`input[data-pair="${p.key}"][data-side="b"]`).value||0);
+
+    pairs[p.key]={a:aG,b:bG};
+    aGamesTotal+=aG;
+    bGamesTotal+=bG;
+
+    if(aG>bG) aSets++;
+    else if(bG>aG) bSets++;
+  });
+
+  let aPts=aSets,bPts=bSets;
+  if(aSets>bSets) aPts+=2;
+  else if(bSets>aSets) bPts+=2;
+
+  const record={
+    a,b,
+    aSets,bSets,
+    aPts,bPts,
+    aGamesTotal,bGamesTotal,
+    pairs,
+    ts:Date.now()
+  };
+
+  const url=new URL(SHEETS_WEBAPP_URL);
+  url.searchParams.set("action","upsert");
+  url.searchParams.set("key",WRITE_KEY);
+  url.searchParams.set("matchKey",`r${r}_m${mIndex}`);
+  url.searchParams.set("record",JSON.stringify(record));
+
+  const res=await fetch(url.toString());
+  const json=await res.json();
+  alert(json.ok?"Saved":"Error: "+json.error);
+}
+
+/* CLEAR */
+async function clearMatch(){
+  const r = Number(document.getElementById("roundSelect").value);
+  const mIndex = Number(document.getElementById("matchSelect").value);
+
+  const url=new URL(SHEETS_WEBAPP_URL);
+  url.searchParams.set("action","delete");
+  url.searchParams.set("key",WRITE_KEY);
+  url.searchParams.set("matchKey",`r${r}_m${mIndex}`);
+
+  const res=await fetch(url.toString());
+  const json=await res.json();
+  alert(json.ok?"Deleted":"Error: "+json.error);
+}
+
+/* RESET */
+async function resetAll(){
+  if(!confirm("Reset entire season?")) return;
+
+  const url=new URL(SHEETS_WEBAPP_URL);
+  url.searchParams.set("action","reset");
+  url.searchParams.set("key",WRITE_KEY);
+
+  const res=await fetch(url.toString());
+  const json=await res.json();
+  alert(json.ok?"All reset":"Error: "+json.error);
+}
+
 </script>
 </body>
 </html>
