@@ -1,319 +1,936 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Berwick Tennis Club — Admin</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Berwick Tennis Club — Admin (Thursday Night Comp • Autumn 2026)</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --bg:#070b16;
+      --card:rgba(18,26,51,.78);
+      --muted:#93a4c7;
+      --text:#e9eeff;
+      --accent:#7dd3fc;
+      --good:#34d399;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(125,211,252,.20), transparent 60%),
+        radial-gradient(900px 500px at 90% 0%, rgba(167,139,250,.18), transparent 55%),
+        var(--bg);
+      color:var(--text);
+    }
+    header{
+      position:sticky; top:0;
+      backdrop-filter: blur(10px);
+      background: rgba(7,11,22,.78);
+      border-bottom:1px solid var(--border);
+      z-index:10
+    }
+    .wrap{max-width:1150px; margin:0 auto; padding:18px 18px}
+    .top{display:flex; align-items:center; gap:14px; justify-content:space-between; flex-wrap:wrap}
+    .brand{display:flex; align-items:center; gap:12px}
+    h1{font-size:18px; margin:0}
+    .sub{font-size:12px; color:var(--muted); margin-top:2px}
 
-<style>
-/* SAME STYLING AS INDEX */
-:root{
-  --bg:#070b16;
-  --card:rgba(18,26,51,.78);
-  --muted:#93a4c7;
-  --text:#e9eeff;
-  --accent:#7dd3fc;
-  --good:#34d399;
-  --warn:#fbbf24;
-  --bad:#fb7185;
-  --border:rgba(255,255,255,.10);
-  --shadow:0 10px 30px rgba(0,0,0,.35);
-  --radius:16px;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:system-ui;
-  background:var(--bg);
-  color:var(--text);
-}
-header{
-  background:#0c1530;
-  padding:16px;
-  border-bottom:1px solid var(--border);
-}
-.wrap{max-width:1100px;margin:auto;padding:20px}
-.card{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:20px;
-  margin-bottom:16px;
-}
-input,select{
-  background:#0c1530;
-  border:1px solid var(--border);
-  color:var(--text);
-  padding:8px;
-  border-radius:8px;
-}
-button{
-  padding:8px 14px;
-  border-radius:8px;
-  border:1px solid var(--border);
-  background:#1b2b55;
-  color:white;
-  cursor:pointer;
-}
-button.primary{background:#2563eb}
-button.danger{background:#dc2626}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.table{width:100%;border-collapse:collapse;margin-top:10px}
-.table td,.table th{padding:8px;border-bottom:1px solid var(--border);text-align:center}
-.badge{padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid var(--border)}
-.badge.good{color:var(--good)}
-.badge.bad{color:var(--bad)}
-.badge.warn{color:var(--warn)}
-.hidden{display:none}
-</style>
+    .card{
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow)
+    }
+    .card .hd{padding:14px 14px 0}
+    .card .bd{padding:14px}
+    .title{font-size:16px; margin:0 0 6px}
+    .muted{color:var(--muted)}
+    .foot{margin-top:10px; font-size:12px; color:var(--muted)}
+
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .spacer{flex:1}
+
+    select,input{
+      background: rgba(7,11,22,.65);
+      border:1px solid var(--border);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      font-size:13px;
+      outline:none
+    }
+    input[type="number"]{width:86px}
+    .hint{font-size:12px; color:var(--muted)}
+
+    .btn{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:13px
+    }
+    .btn.primary{border-color: rgba(125,211,252,.55); background: rgba(125,211,252,.14)}
+    .btn.danger{border-color: rgba(251,113,133,.55); background: rgba(251,113,133,.10)}
+    .btn:disabled{opacity:.5; cursor:not-allowed}
+
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:12px;
+      border:1px solid var(--border);
+      color:var(--muted)
+    }
+    .badge.good{border-color: rgba(52,211,153,.45); color: rgba(52,211,153,.95)}
+    .badge.warn{border-color: rgba(251,191,36,.45); color: rgba(251,191,36,.95)}
+    .badge.bad{border-color: rgba(251,113,133,.45); color: rgba(251,113,133,.95)}
+
+    table{width:100%; border-collapse:collapse; overflow:hidden; border-radius:14px}
+    th,td{padding:10px 10px; border-bottom:1px solid var(--border); text-align:left; font-size:13px; vertical-align:top}
+    th{font-size:12px; color:var(--muted); font-weight:600}
+    tr:hover td{background: rgba(255,255,255,.03)}
+    .right{text-align:right}
+    .center{text-align:center}
+
+    /* Scoresheet */
+    .sheet{
+      border:1px solid var(--border);
+      border-radius:14px;
+      overflow:hidden;
+      background: rgba(255,255,255,.02);
+    }
+    .sheet .head{
+      padding:12px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .sheet .meta{display:flex; flex-direction:column; gap:4px}
+    .sheet .meta .line{font-size:12px; color:var(--muted)}
+    .sheet .teams{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      width:100%;
+      margin-top:10px;
+    }
+    @media (max-width:760px){ .sheet .teams{grid-template-columns:1fr} }
+
+    .teamBox{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px;
+      background: rgba(255,255,255,.02);
+    }
+    .teamBox .tname{font-weight:900}
+    .teamBox .plist{margin-top:8px; display:grid; gap:6px}
+    .teamBox .prow{display:flex; justify-content:space-between; gap:10px}
+    .teamBox .prow .r{color:var(--muted); font-size:12px}
+
+    .gridRow{
+      display:grid;
+      grid-template-columns: 130px 1fr 1fr 110px;
+      gap:10px;
+      padding:10px 12px;
+      border-bottom:1px solid var(--border);
+      align-items:center;
+    }
+    .gridRow:last-child{border-bottom:none}
+    .pairTag{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid var(--border);
+      padding:6px 8px;
+      border-radius:999px;
+      width:max-content;
+      background: rgba(255,255,255,.02);
+    }
+    .cell{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+    .who{font-size:12px; color:var(--muted); line-height:1.25}
+    .winMark{
+      font-size:12px; padding:4px 8px;
+      border-radius:999px; border:1px solid var(--border); color:var(--muted)
+    }
+    .winMark.good{border-color: rgba(52,211,153,.45); color: rgba(52,211,153,.95)}
+    .winMark.bad{border-color: rgba(251,113,133,.55); color: rgba(251,113,133,.95)}
+    .winMark.warn{border-color: rgba(251,191,36,.45); color: rgba(251,191,36,.95)}
+    @media (max-width:760px){
+      .gridRow{grid-template-columns: 1fr; gap:8px}
+      input[type="number"]{width:78px}
+    }
+
+    .totals{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:10px;
+      margin-top:12px;
+    }
+    @media (max-width:760px){ .totals{grid-template-columns:1fr} }
+    .tot{border:1px solid var(--border); border-radius:14px; padding:10px; background: rgba(255,255,255,.02)}
+    .tot .k{font-size:12px; color:var(--muted)}
+    .tot .v{font-size:18px; font-weight:900; margin-top:4px}
+
+    .gateBox{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px;
+      background: rgba(255,255,255,.02);
+      max-width: 560px;
+    }
+
+    dialog{
+      border:none; border-radius:18px; padding:0;
+      background: rgba(18,26,51,.98);
+      color:var(--text);
+      width:min(520px, 92vw);
+      box-shadow: var(--shadow)
+    }
+    dialog::backdrop{background: rgba(0,0,0,.55)}
+    .modal-hd{padding:14px 14px 0}
+    .modal-ft{padding:0 14px 14px; display:flex; justify-content:flex-end; gap:10px}
+  </style>
 </head>
 
 <body>
-
 <header>
-  <div class="wrap">
-    <h2>Berwick Tennis Club — Admin Panel</h2>
-    <div style="color:var(--muted)">Thursday Night Competition</div>
+  <div class="wrap top">
+    <div class="brand">
+      <div>
+        <h1>Berwick Tennis Club — Admin</h1>
+        <div class="sub">Thursday Night Comp • Autumn 2026 • Upload & manage scores</div>
+      </div>
+    </div>
+    <div class="row">
+      <span class="badge" id="cloudStatus">Loading…</span>
+      <span class="muted" id="cloudStatusMsg"></span>
+      <span class="spacer"></span>
+      <button class="btn" id="btnLockTop">Lock</button>
+    </div>
   </div>
 </header>
 
-<div class="wrap">
-
-<!-- LOGIN -->
-<div class="card" id="loginCard">
-  <h3>Enter Admin Code</h3>
-  <div class="row">
-    <input type="password" id="adminCode" placeholder="Enter code" />
-    <button onclick="unlock()">Unlock</button>
-  </div>
-</div>
-
-<!-- ADMIN CONTENT -->
-<div id="adminContent" class="hidden">
-
-  <!-- Upload Scores -->
-  <div class="card">
-    <h3>Upload Scores</h3>
-
-    <div class="row">
-      <label>Round:</label>
-      <select id="roundSelect"></select>
-
-      <label>Match:</label>
-      <select id="matchSelect"></select>
+<main class="wrap">
+  <section class="card">
+    <div class="hd">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <h2 class="title">Upload Scores</h2>
+          <div class="muted">Admin page (separate URL). Still gated with code.</div>
+        </div>
+        <div class="row" id="toolsRow" hidden>
+          <button class="btn" id="btnClearMatch">Clear match</button>
+          <button class="btn danger" id="btnResetAll">Reset all</button>
+          <button class="btn" id="btnLock">Lock</button>
+        </div>
+      </div>
     </div>
 
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Pairing</th>
-          <th>Team A</th>
-          <th>Team B</th>
-        </tr>
-      </thead>
-      <tbody id="scoreBody"></tbody>
-    </table>
+    <div class="bd">
+      <div id="gateArea" class="gateBox">
+        <div class="badge">Protected</div>
+        <div class="title" style="margin-top:10px">Enter access code</div>
+        <div class="muted" style="margin-top:6px">This device stays unlocked until you press “Lock”.</div>
+        <div class="row" style="margin-top:12px">
+          <input id="gateCode" type="password" placeholder="Code" autocomplete="off" style="min-width:220px" />
+          <button class="btn primary" id="btnUnlock">Unlock</button>
+        </div>
+        <div class="hint" id="gateHint" style="margin-top:10px">Tip: captains can bookmark this admin URL.</div>
+      </div>
 
-    <div class="row" style="margin-top:15px">
-      <button class="primary" onclick="saveMatch()">Save Match</button>
-      <button onclick="clearMatch()">Clear Match</button>
-      <button class="danger" onclick="resetAll()">Reset All</button>
+      <div id="adminArea" hidden>
+        <div class="row" style="margin-bottom:12px">
+          <span class="hint">Round:</span>
+          <select id="roundSelect"></select>
+
+          <span class="hint">Match:</span>
+          <select id="matchSelect"></select>
+
+          <button class="btn primary" id="btnLoadSheet">Load score sheet</button>
+
+          <span class="spacer"></span>
+
+          <span class="badge" id="roundDateBadge">Date: —</span>
+        </div>
+
+        <div id="sheetHost"></div>
+
+        <div class="foot">
+          Scoring: 1 point per set won + 2 bonus points if you win the night (no bonus on a tie).<br>
+          Validation: each set should normally be <b>6–x</b>. The admin page will warn if <b>neither side reaches 6</b>, if both reach 6, or if scores look unusual — you can still save after confirming.
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog id="confirmDialog">
+  <div class="modal-hd">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <h3 class="title" style="margin-top:8px" id="confirmTitle">Confirm</h3>
+        <div class="muted" id="confirmMsg"></div>
+      </div>
+      <button class="btn" id="btnConfirmClose">Close</button>
     </div>
   </div>
-
-</div>
-
-</div>
+  <div class="modal-ft">
+    <button class="btn" id="btnConfirmNo">Cancel</button>
+    <button class="btn danger" id="btnConfirmYes">Yes</button>
+  </div>
+</dialog>
 
 <script>
+/* ============================================================
+   CONFIG — IMPORTANT
+   ============================================================ */
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw8GVO1VqmhHyNhgoVr25lvkROu0D0lrqDA0RQqNQ0e3nxs8ZpJl_uXJe0XIvJjt-H1BQ/exec";
+const API_KEY = "BTC1818";
 
-/* CONFIG */
-const SHEETS_WEBAPP_URL =
-"https://script.google.com/macros/s/AKfycbw8GVO1VqmhHyNhgoVr25lvkROu0D0lrqDA0RQqNQ0e3nxs8ZpJl_uXJe0XIvJjt-H1BQ/exec";
+/* Upload gate (local device) */
+const SCORE_ENTRY_CODE = "BTC1818";
+const SEASON_KEY = "btc_thursday_autumn_2026_v2_cloud";
+const UNLOCK_KEY = SEASON_KEY + "_admin_unlocked";
 
-const WRITE_KEY = "BTC1818";
-
-/* TEAMS + ROUNDS (same structure as index) */
+/* Teams (same as your original HTML) */
 const teams = {
-  1:["Cooper Khalil","Simran Chawla","David Sutton","Chris Maniatakis"],
-  2:["Enrique Lopez","Craig Kitner","Josh Bury","Varun Sridhara"],
-  3:["Michael Rominger","David Ng","Cameron Rush","Alan Chumacero"],
-  4:["Jonathan Rogers","Rafa Bouzinelos","David Thurmond","Andrew Watson"],
-  5:["Chung Tan","Huss Shafai","Tom Maloney","Brett Kurz"],
-  6:["Vignesh Pakkiam","Eric Castricum","Stephen Saunders","Mark Findlay"],
-  7:["Chris Scott","Justin Hermann","Nick Teo","Dishit Devasia"],
+  1:{ name:"Team 1", players:["Cooper Khalil","Simran Chawla","David Sutton","Chris Maniatakis"] },
+  2:{ name:"Team 2", players:["Enrique Lopez","Craig Kitner","Josh Bury","Varun Sridhara"] },
+  3:{ name:"Team 3", players:["Michael Rominger","David Ng","Cameron Rush","Alan Chumacero"] },
+  4:{ name:"Team 4", players:["Jonathan Rogers","Rafa Bouzinelos","David Thurmond","Andrew Watson"] },
+  5:{ name:"Team 5", players:["Chung Tan","Huss Shafai","Tom Maloney","Brett Kurz"] },
+  6:{ name:"Team 6", players:["Vignesh Pakkiam","Eric Castricum","Stephen Saunders","Mark Findlay"] },
+  7:{ name:"Team 7", players:["Chris Scott","Justin Hermann","Nick Teo","Dishit Devasia"] },
 };
 
+/* Fixtures */
 const rounds = [
-  {r:1, matches:[[1,6],[2,5],[3,4],[7,null]]},
-  {r:2, matches:[[4,2],[5,1],[6,7],[3,null]]},
-  {r:3, matches:[[2,7],[3,6],[4,5],[1,null]]},
-  {r:4, matches:[[5,3],[6,2],[7,1],[4,null]]},
-  {r:5, matches:[[3,1],[4,7],[5,6],[2,null]]},
-  {r:6, matches:[[6,4],[7,3],[1,2],[5,null]]},
-  {r:7, matches:[[7,5],[1,4],[2,3],[6,null]]},
-  {r:8, matches:[[1,6],[2,5],[3,4],[7,null]]},
-  {r:9, matches:[[4,2],[5,1],[6,7],[3,null]]},
-  {r:10, matches:[[2,7],[3,6],[4,5],[1,null]]},
-  {r:11, matches:[[5,3],[6,2],[7,1],[4,null]]},
-  {r:12, matches:[[3,1],[4,7],[5,6],[2,null]]},
-  {r:13, matches:[[6,4],[7,3],[1,2],[5,null]]},
-  {r:14, matches:[[7,5],[1,4],[2,3],[6,null]]}
+  { r:1,  date:"05-Feb-26", matches:[[1,6],[2,5],[3,4],[7,null]] },
+  { r:2,  date:"12-Feb-26", matches:[[4,2],[5,1],[6,7],[3,null]] },
+  { r:3,  date:"19-Feb-26", matches:[[2,7],[3,6],[4,5],[1,null]] },
+  { r:4,  date:"26-Feb-26", matches:[[5,3],[6,2],[7,1],[4,null]] },
+  { r:5,  date:"05-Mar-26", matches:[[3,1],[4,7],[5,6],[2,null]] },
+  { r:6,  date:"12-Mar-26", matches:[[6,4],[7,3],[1,2],[5,null]] },
+  { r:7,  date:"19-Mar-26", matches:[[7,5],[1,4],[2,3],[6,null]] },
+  { r:8,  date:"26-Mar-26", matches:[[1,6],[2,5],[3,4],[7,null]] },
+  { r:9,  date:"23-Apr-26", matches:[[4,2],[5,1],[6,7],[3,null]] },
+  { r:10, date:"30-Apr-26", matches:[[2,7],[3,6],[4,5],[1,null]] },
+  { r:11, date:"07-May-26", matches:[[5,3],[6,2],[7,1],[4,null]] },
+  { r:12, date:"14-May-26", matches:[[3,1],[4,7],[5,6],[2,null]] },
+  { r:13, date:"21-May-26", matches:[[6,4],[7,3],[1,2],[5,null]] },
+  { r:14, date:"28-May-26", matches:[[7,5],[1,4],[2,3],[6,null]] },
 ];
 
+/* Pairing order */
 const pairings = [
-  {key:"12", label:"1+2"},
-  {key:"34", label:"3+4"},
-  {key:"13", label:"1+3"},
-  {key:"24", label:"2+4"},
-  {key:"14", label:"1+4"},
-  {key:"23", label:"2+3"},
+  { key:"12", label:"1 + 2", a:[1,2], b:[1,2] },
+  { key:"34", label:"3 + 4", a:[3,4], b:[3,4] },
+  { key:"13", label:"1 + 3", a:[1,3], b:[1,3] },
+  { key:"24", label:"2 + 4", a:[2,4], b:[2,4] },
+  { key:"14", label:"1 + 4", a:[1,4], b:[1,4] },
+  { key:"23", label:"2 + 3", a:[2,3], b:[2,3] },
 ];
 
-let unlocked = false;
+/* ---------- State ---------- */
+let RESULTS = {}; // matchKey -> record (loaded from Google Sheet)
 
-/* LOGIN */
-function unlock(){
-  if(document.getElementById("adminCode").value === WRITE_KEY){
-    unlocked = true;
-    document.getElementById("loginCard").style.display="none";
-    document.getElementById("adminContent").classList.remove("hidden");
-    initAdmin();
+/* ---------- Helpers ---------- */
+const $ = (sel)=>document.querySelector(sel);
+const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
+
+function escapeHtml_(s){
+  return String(s).replace(/[&<>"']/g, (c)=>({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[c]));
+}
+function matchId(roundNum, matchIndex){ return `r${roundNum}_m${matchIndex}`; }
+function teamName(id){ return teams[id]?.name ?? `Team ${id}`; }
+
+function cloudReady_(){
+  return SHEETS_WEBAPP_URL && !SHEETS_WEBAPP_URL.includes("PASTE_YOUR_WEB_APP_URL");
+}
+
+/* ---------- Cloud API (GET only) ---------- */
+async function cloudDump_(){
+  const url = new URL(SHEETS_WEBAPP_URL);
+  url.searchParams.set("action","dump");
+  url.searchParams.set("key", API_KEY);
+
+  const res = await fetch(url.toString(), { method:"GET" });
+  if (!res.ok) throw new Error("Could not load from Google Sheets (dump).");
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || "Dump failed.");
+  return json.results || {};
+}
+
+async function cloudUpsert_(matchKey, record){
+  const url = new URL(SHEETS_WEBAPP_URL);
+  url.searchParams.set("action","upsert");
+  url.searchParams.set("key", API_KEY);
+  url.searchParams.set("matchKey", matchKey);
+  url.searchParams.set("record", JSON.stringify(record));
+
+  const res = await fetch(url.toString(), { method:"GET" });
+  if (!res.ok) throw new Error("Could not save to Google Sheets (upsert).");
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || "Upsert failed.");
+}
+
+async function cloudDelete_(matchKey){
+  const url = new URL(SHEETS_WEBAPP_URL);
+  url.searchParams.set("action","delete");
+  url.searchParams.set("key", API_KEY);
+  url.searchParams.set("matchKey", matchKey);
+
+  const res = await fetch(url.toString(), { method:"GET" });
+  if (!res.ok) throw new Error("Could not delete from Google Sheets.");
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || "Delete failed.");
+}
+
+async function cloudReset_(){
+  const url = new URL(SHEETS_WEBAPP_URL);
+  url.searchParams.set("action","reset");
+  url.searchParams.set("key", API_KEY);
+
+  const res = await fetch(url.toString(), { method:"GET" });
+  if (!res.ok) throw new Error("Could not reset Google Sheets.");
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || "Reset failed.");
+}
+
+/* ---------- Gate ---------- */
+function isUnlocked_(){ return localStorage.getItem(UNLOCK_KEY) === "1"; }
+function setUnlocked_(val){
+  if (val) localStorage.setItem(UNLOCK_KEY, "1");
+  else localStorage.removeItem(UNLOCK_KEY);
+}
+function renderGate_(){
+  const unlocked = isUnlocked_();
+  $("#gateArea").hidden = unlocked;
+  $("#adminArea").hidden = !unlocked;
+  $("#toolsRow").hidden = !unlocked;
+}
+function tryUnlock_(){
+  const input = $("#gateCode").value.trim();
+  if (input === SCORE_ENTRY_CODE){
+    setUnlocked_(true);
+    $("#gateCode").value = "";
+    renderGate_();
+    toast_("Unlocked ✔");
+    populateRoundSelect_();
+    $("#roundSelect").value = "1";
+    populateMatchSelect_();
+    updateRoundDateBadge_();
   } else {
-    alert("Wrong code");
+    toast_("Wrong code");
+    $("#gateCode").focus();
+  }
+}
+function lock_(){
+  setUnlocked_(false);
+  $("#sheetHost").innerHTML = "";
+  renderGate_();
+  toast_("Locked 🔒");
+}
+
+/* ---------- Status UI ---------- */
+function setCloudStatus_(label, kind, msg){
+  const b = $("#cloudStatus");
+  const m = $("#cloudStatusMsg");
+  b.textContent = label;
+  b.className = "badge " + (kind==="good"?"good":kind==="bad"?"bad":kind==="warn"?"warn":"");
+  m.textContent = msg || "";
+}
+
+/* ---------- Confirm dialog ---------- */
+function openConfirm(title, msg, onYes){
+  const d = $("#confirmDialog");
+  $("#confirmTitle").textContent = title;
+  $("#confirmMsg").textContent = msg;
+  d._onYes = onYes;
+  d.showModal();
+}
+$("#btnConfirmClose").addEventListener("click", ()=>$("#confirmDialog").close());
+$("#btnConfirmNo").addEventListener("click", ()=>$("#confirmDialog").close());
+$("#btnConfirmYes").addEventListener("click", async ()=>{
+  const d = $("#confirmDialog");
+  const fn = d._onYes;
+  d.close();
+  if (typeof fn === "function") await fn();
+});
+
+/* ---------- Toast ---------- */
+let toastTimer = null;
+function toast_(msg){
+  let el = document.getElementById("toast");
+  if (!el){
+    el = document.createElement("div");
+    el.id = "toast";
+    el.style.position = "fixed";
+    el.style.left = "50%";
+    el.style.bottom = "22px";
+    el.style.transform = "translateX(-50%)";
+    el.style.background = "rgba(18,26,51,.95)";
+    el.style.border = "1px solid rgba(255,255,255,.15)";
+    el.style.color = "white";
+    el.style.padding = "10px 12px";
+    el.style.borderRadius = "999px";
+    el.style.boxShadow = "0 10px 30px rgba(0,0,0,.35)";
+    el.style.zIndex = "999";
+    el.style.fontSize = "13px";
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = "1";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.style.opacity = "0"; }, 1800);
+}
+
+/* ---------- Scoring logic ---------- */
+function calcNightPoints(aSets, bSets){
+  aSets = Number(aSets)||0; bSets = Number(bSets)||0;
+  let aPts = aSets, bPts = bSets;
+  if (aSets > bSets) aPts += 2;
+  else if (bSets > aSets) bPts += 2;
+  return {aPts, bPts};
+}
+
+/**
+ * Decide a set winner + validity status.
+ * Rules:
+ * - STANDARD OK: 6–x where opponent != 6
+ * - WARN: any unusual but still has a clear winner and at least one side reached 6
+ * - BAD: neither side reached 6 OR tied OR missing
+ */
+function decideSetWinnerStrict_(aGames, bGames){
+  const a = Number(aGames), b = Number(bGames);
+  const aFin = Number.isFinite(a), bFin = Number.isFinite(b);
+
+  if (!aFin && !bFin) return { winner:null, status:"empty", reason:"empty" };
+  if (!aFin || !bFin) return { winner:null, status:"bad", reason:"missing number" };
+
+  // Must have at least one side reach 6
+  const someoneReached6 = (a === 6 || b === 6);
+  if (!someoneReached6) return { winner:null, status:"bad", reason:"no one reached 6" };
+
+  // no ties
+  if (a === b) return { winner:null, status:"bad", reason:"tied score" };
+
+  // winner
+  const winner = (a > b) ? "A" : "B";
+
+  // standard 6–x where x != 6
+  if ((a === 6 && b !== 6) || (b === 6 && a !== 6)) return { winner, status:"ok", reason:"standard" };
+
+  // if both 6 or weird ranges but clear winner and someone reached 6
+  return { winner, status:"warn", reason:"unusual" };
+}
+
+/* ---------- Round/Match selectors ---------- */
+function populateRoundSelect_(){
+  const rs = $("#roundSelect");
+  rs.innerHTML = "";
+  rounds.forEach(r=>{
+    const opt = document.createElement("option");
+    opt.value = String(r.r);
+    opt.textContent = `Round ${r.r} — ${r.date}`;
+    rs.appendChild(opt);
+  });
+}
+
+function populateMatchSelect_(){
+  const r = Number($("#roundSelect").value);
+  const round = rounds.find(x=>x.r===r);
+  const ms = $("#matchSelect");
+  ms.innerHTML = "";
+  round.matches.forEach((m,idx)=>{
+    const [a,b] = m;
+    if (b == null) return; // ignore byes
+    const opt = document.createElement("option");
+    opt.value = String(idx);
+    opt.textContent = `${teamName(a)} vs ${teamName(b)}`;
+    ms.appendChild(opt);
+  });
+  $("#btnLoadSheet").disabled = ms.options.length === 0;
+}
+
+function getSelectedMatch_(){
+  const r = Number($("#roundSelect").value);
+  const idx = Number($("#matchSelect").value);
+  const round = rounds.find(x=>x.r===r);
+  const [a,b] = round.matches[idx];
+  return { round, r, idx, a, b, id: matchId(r, idx) };
+}
+
+function updateRoundDateBadge_(){
+  const r = Number($("#roundSelect").value);
+  const round = rounds.find(x=>x.r===r);
+  $("#roundDateBadge").textContent = `Date: ${round?.date ?? "—"}`;
+}
+
+/* ---------- Scoresheet render ---------- */
+function renderScoreSheet_(){
+  const host = $("#sheetHost");
+  host.innerHTML = "";
+
+  const ms = $("#matchSelect");
+  if (!ms.options.length){
+    host.innerHTML = `<div class="muted">No match available for this round (bye only).</div>`;
+    return;
+  }
+
+  const {round, r, a, b, id} = getSelectedMatch_();
+  const existing = RESULTS[id];
+  const teamA = teams[a], teamB = teams[b];
+  const pairsObj = existing?.pairs || {};
+
+  host.innerHTML = `
+    <div class="sheet" data-match-id="${escapeHtml_(id)}">
+      <div class="head">
+        <div class="meta">
+          <div class="line"><b>Berwick Tennis Club</b> • Thursday Night Comp • <b>Autumn 2026</b></div>
+          <div class="line">Round: <b>${r}</b> • Date: <b>${escapeHtml_(round.date)}</b></div>
+          <div class="line"><b>${escapeHtml_(teamName(a))}</b> vs <b>${escapeHtml_(teamName(b))}</b></div>
+        </div>
+        <div class="row">
+          <span class="badge">Enter games (first to 6)</span>
+          <button class="btn primary" id="btnSaveSheet">Save to Google Sheets</button>
+        </div>
+
+        <div class="teams">
+          <div class="teamBox">
+            <div class="badge">Team ${a}</div>
+            <div class="tname">${escapeHtml_(teamName(a))}</div>
+            <div class="plist">
+              ${teamA.players.map((p,i)=>`
+                <div class="prow"><span class="r">Player ${i+1}</span><span>${escapeHtml_(p)}</span></div>
+              `).join("")}
+            </div>
+          </div>
+
+          <div class="teamBox">
+            <div class="badge">Team ${b}</div>
+            <div class="tname">${escapeHtml_(teamName(b))}</div>
+            <div class="plist">
+              ${teamB.players.map((p,i)=>`
+                <div class="prow"><span class="r">Player ${i+1}</span><span>${escapeHtml_(p)}</span></div>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        ${pairings.map(pr=>{
+          const saved = pairsObj[pr.key] || {};
+          const aVal = (saved.a ?? "");
+          const bVal = (saved.b ?? "");
+
+          const aNames = pr.a.map(n=>teamA.players[n-1]).join(" & ");
+          const bNames = pr.b.map(n=>teamB.players[n-1]).join(" & ");
+
+          return `
+            <div class="gridRow" data-pair="${escapeHtml_(pr.key)}">
+              <div class="pairTag">${escapeHtml_(pr.label)}</div>
+
+              <div class="cell">
+                <div class="who">
+                  <div><b>${escapeHtml_(teamName(a))}</b></div>
+                  <div>${escapeHtml_(aNames)}</div>
+                </div>
+                <input type="number" min="0" max="10" step="1" inputmode="numeric" data-side="a" value="${escapeHtml_(aVal)}" placeholder="Games" />
+              </div>
+
+              <div class="cell">
+                <div class="who">
+                  <div><b>${escapeHtml_(teamName(b))}</b></div>
+                  <div>${escapeHtml_(bNames)}</div>
+                </div>
+                <input type="number" min="0" max="10" step="1" inputmode="numeric" data-side="b" value="${escapeHtml_(bVal)}" placeholder="Games" />
+              </div>
+
+              <div class="cell" style="justify-content:flex-end">
+                <span class="winMark" data-win="${escapeHtml_(pr.key)}">—</span>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+
+      <div class="bd">
+        <div id="sheetWarnings"></div>
+        <div class="totals">
+          <div class="tot">
+            <div class="k">Sets (won)</div>
+            <div class="v"><span id="aSetsOut">0</span> – <span id="bSetsOut">0</span></div>
+            <div class="muted" style="margin-top:6px">${escapeHtml_(teamName(a))} vs ${escapeHtml_(teamName(b))}</div>
+          </div>
+          <div class="tot">
+            <div class="k">Points (incl. bonus)</div>
+            <div class="v"><span id="aPtsOut">0</span> – <span id="bPtsOut">0</span></div>
+            <div class="muted" style="margin-top:6px">+2 bonus for winning the night</div>
+          </div>
+          <div class="tot">
+            <div class="k">Total Games (won)</div>
+            <div class="v"><span id="aGamesOut">0</span> – <span id="bGamesOut">0</span></div>
+            <div class="muted" style="margin-top:6px">Sum across 6 sets</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const sheet = host.querySelector(".sheet");
+  sheet.querySelectorAll("input[type='number']").forEach(inp=>{
+    inp.addEventListener("input", ()=>recalcSheet_(sheet, a, b));
+  });
+
+  sheet.querySelector("#btnSaveSheet").addEventListener("click", async ()=>{
+    if (!cloudReady_()){
+      alert("Cloud URL not set. Paste your Apps Script Web App URL into SHEETS_WEBAPP_URL.");
+      return;
+    }
+
+    setCloudStatus_("Saving…", "warn", "Writing to the shared sheet...");
+    const computed = recalcSheet_(sheet, a, b, true);
+
+    if (!computed.ok){
+      openConfirm(
+        "Save with warnings?",
+        "Some sets don’t look valid (e.g. nobody reached 6) or look unusual. Save anyway?",
+        async ()=>{ await saveSheetCloud_(sheet, a, b, computed); }
+      );
+      return;
+    }
+
+    await saveSheetCloud_(sheet, a, b, computed);
+  });
+
+  recalcSheet_(sheet, a, b);
+}
+
+function recalcSheet_(sheetEl, aTeamId, bTeamId, returnObject=false){
+  const warnings = [];
+  const pairsOut = {};
+
+  let aSets = 0, bSets = 0;
+  let aGamesTotal = 0, bGamesTotal = 0;
+
+  let ok = true;
+
+  for (const pr of pairings){
+    const row = sheetEl.querySelector(`[data-pair="${pr.key}"]`);
+    const aInp = row.querySelector(`input[data-side="a"]`);
+    const bInp = row.querySelector(`input[data-side="b"]`);
+    const aVal = aInp.value === "" ? null : Number(aInp.value);
+    const bVal = bInp.value === "" ? null : Number(bInp.value);
+
+    if (aVal != null) aGamesTotal += aVal;
+    if (bVal != null) bGamesTotal += bVal;
+
+    pairsOut[pr.key] = { a: (aVal==null?"":aVal), b: (bVal==null?"":bVal) };
+
+    const winBadge = row.querySelector(`[data-win="${pr.key}"]`);
+    const d = decideSetWinnerStrict_(aVal, bVal);
+
+    if (d.status === "empty"){
+      winBadge.textContent = "—";
+      winBadge.className = "winMark";
+      continue;
+    }
+
+    if (d.status === "bad"){
+      ok = false;
+      winBadge.textContent = "Check";
+      winBadge.className = "winMark bad";
+      warnings.push(`${pr.label}: ${d.reason} (${aVal}–${bVal})`);
+      continue;
+    }
+
+    // ok or warn: has winner
+    if (d.winner === "A"){
+      aSets++;
+      winBadge.textContent = `${teamName(aTeamId)} win`;
+      winBadge.className = "winMark " + (d.status === "ok" ? "good" : "warn");
+      if (d.status === "warn"){
+        ok = false;
+        warnings.push(`${pr.label}: unusual score (${aVal}–${bVal})`);
+      }
+    } else {
+      bSets++;
+      winBadge.textContent = `${teamName(bTeamId)} win`;
+      winBadge.className = "winMark " + (d.status === "ok" ? "good" : "warn");
+      if (d.status === "warn"){
+        ok = false;
+        warnings.push(`${pr.label}: unusual score (${aVal}–${bVal})`);
+      }
+    }
+  }
+
+  const pts = calcNightPoints(aSets, bSets);
+
+  sheetEl.querySelector("#aSetsOut").textContent = String(aSets);
+  sheetEl.querySelector("#bSetsOut").textContent = String(bSets);
+  sheetEl.querySelector("#aPtsOut").textContent = String(pts.aPts);
+  sheetEl.querySelector("#bPtsOut").textContent = String(pts.bPts);
+  sheetEl.querySelector("#aGamesOut").textContent = String(aGamesTotal);
+  sheetEl.querySelector("#bGamesOut").textContent = String(bGamesTotal);
+
+  const warnHost = sheetEl.querySelector("#sheetWarnings");
+  if (!warnings.length){
+    warnHost.innerHTML = `<span class="badge good">All good</span>`;
+  } else {
+    warnHost.innerHTML = `
+      <div class="row" style="margin-bottom:8px">
+        <span class="badge warn">Warnings</span>
+        <span class="muted">You can still save, but double-check these lines.</span>
+      </div>
+      <ul style="margin:0; padding-left:18px; color: var(--muted); line-height:1.5">
+        ${warnings.map(w=>`<li>${escapeHtml_(w)}</li>`).join("")}
+      </ul>
+    `;
+  }
+
+  const out = { ok, pairs: pairsOut, aSets, bSets, aGamesTotal, bGamesTotal, aPts: pts.aPts, bPts: pts.bPts };
+  return returnObject ? out : out;
+}
+
+async function saveSheetCloud_(sheetEl, aTeamId, bTeamId, computed){
+  try{
+    const id = sheetEl.getAttribute("data-match-id");
+    const record = {
+      a: aTeamId,
+      b: bTeamId,
+      pairs: Object.fromEntries(
+        Object.entries(computed.pairs).map(([k,v])=>[
+          k,
+          { a: (v.a===""?null:Number(v.a)), b:(v.b===""?null:Number(v.b)) }
+        ])
+      ),
+      aSets: computed.aSets,
+      bSets: computed.bSets,
+      aGamesTotal: computed.aGamesTotal,
+      bGamesTotal: computed.bGamesTotal,
+      aPts: computed.aPts,
+      bPts: computed.bPts,
+      ts: Date.now()
+    };
+
+    await cloudUpsert_(id, record);
+
+    RESULTS[id] = record;
+
+    setCloudStatus_("Saved ✔", "good", "Saved to the shared sheet.");
+    toast_("Saved ✔");
+
+  } catch (e){
+    console.error("Save error:", e);
+    setCloudStatus_("Save failed", "bad", e?.message || "Could not save.");
+    alert(e?.message || "Save failed");
   }
 }
 
-/* INIT */
-function initAdmin(){
-  const rs = document.getElementById("roundSelect");
-  rounds.forEach(r=>{
-    const opt = document.createElement("option");
-    opt.value = r.r;
-    opt.textContent = "Round " + r.r;
-    rs.appendChild(opt);
-  });
+/* ---------- Clear / Reset ---------- */
+async function clearSelectedMatch_(){
+  const ms = $("#matchSelect");
+  if (!ms.options.length) return;
 
-  rs.onchange = updateMatchSelect;
-  updateMatchSelect();
-}
+  const {id} = getSelectedMatch_();
+  if (!RESULTS[id]) { toast_("Nothing to clear"); return; }
 
-/* MATCH SELECT */
-function updateMatchSelect(){
-  const r = Number(document.getElementById("roundSelect").value);
-  const round = rounds.find(x=>x.r===r);
-
-  const ms = document.getElementById("matchSelect");
-  ms.innerHTML="";
-  round.matches.forEach((m,i)=>{
-    if(m[1]==null) return;
-    const opt=document.createElement("option");
-    opt.value=i;
-    opt.textContent=`Match ${i+1} (${m[0]} vs ${m[1]})`;
-    ms.appendChild(opt);
-  });
-
-  ms.onchange = renderScoreSheet;
-  renderScoreSheet();
-}
-
-/* SCORE ENTRY */
-function renderScoreSheet(){
-  const r = Number(document.getElementById("roundSelect").value);
-  const mIndex = Number(document.getElementById("matchSelect").value);
-  const match = rounds.find(x=>x.r===r).matches[mIndex];
-
-  const body=document.getElementById("scoreBody");
-  body.innerHTML="";
-
-  pairings.forEach(p=>{
-    body.innerHTML += `
-      <tr>
-        <td>${p.label}</td>
-        <td><input type="number" min="0" max="7" data-pair="${p.key}" data-side="a"></td>
-        <td><input type="number" min="0" max="7" data-pair="${p.key}" data-side="b"></td>
-      </tr>
-    `;
+  openConfirm("Clear this match?", "This removes the selected match from Google Sheets.", async ()=>{
+    try{
+      setCloudStatus_("Deleting…", "warn", "Removing from the shared sheet...");
+      await cloudDelete_(id);
+      delete RESULTS[id];
+      $("#sheetHost").innerHTML = `<div class="muted">Match cleared. Load the score sheet to re-enter.</div>`;
+      setCloudStatus_("Deleted", "good", "Removed from the shared sheet.");
+      toast_("Cleared");
+    } catch(e){
+      setCloudStatus_("Delete failed", "bad", e?.message || "Could not delete.");
+      alert(e?.message || "Delete failed");
+    }
   });
 }
 
-/* SAVE */
-async function saveMatch(){
-  const r = Number(document.getElementById("roundSelect").value);
-  const mIndex = Number(document.getElementById("matchSelect").value);
-  const match = rounds.find(x=>x.r===r).matches[mIndex];
-  const [a,b]=match;
+async function resetAllResults_(){
+  openConfirm("Reset ALL results?", "This deletes ALL results from Google Sheets for everyone.", async ()=>{
+    try{
+      setCloudStatus_("Resetting…", "warn", "Clearing the shared sheet...");
+      await cloudReset_();
+      RESULTS = {};
+      $("#sheetHost").innerHTML = `<div class="muted">All results cleared.</div>`;
+      setCloudStatus_("Reset", "good", "All results cleared.");
+      toast_("Reset");
+    } catch(e){
+      setCloudStatus_("Reset failed", "bad", e?.message || "Could not reset.");
+      alert(e?.message || "Reset failed");
+    }
+  });
+}
 
-  const inputs=document.querySelectorAll("input[data-pair]");
-  const pairs={};
-  let aSets=0,bSets=0,aGamesTotal=0,bGamesTotal=0;
+/* ---------- Init ---------- */
+function init_(){
+  $("#btnUnlock").addEventListener("click", tryUnlock_);
+  $("#gateCode").addEventListener("keydown", (e)=>{ if (e.key === "Enter") tryUnlock_(); });
 
-  pairings.forEach(p=>{
-    const aG = Number(document.querySelector(`input[data-pair="${p.key}"][data-side="a"]`).value||0);
-    const bG = Number(document.querySelector(`input[data-pair="${p.key}"][data-side="b"]`).value||0);
+  $("#btnLock").addEventListener("click", lock_);
+  $("#btnLockTop").addEventListener("click", lock_);
 
-    pairs[p.key]={a:aG,b:bG};
-    aGamesTotal+=aG;
-    bGamesTotal+=bG;
+  $("#btnClearMatch").addEventListener("click", clearSelectedMatch_);
+  $("#btnResetAll").addEventListener("click", resetAllResults_);
 
-    if(aG>bG) aSets++;
-    else if(bG>aG) bSets++;
+  $("#roundSelect").addEventListener("change", ()=>{
+    populateMatchSelect_();
+    updateRoundDateBadge_();
+    $("#sheetHost").innerHTML = "";
   });
 
-  let aPts=aSets,bPts=bSets;
-  if(aSets>bSets) aPts+=2;
-  else if(bSets>aSets) bPts+=2;
+  $("#btnLoadSheet").addEventListener("click", ()=>{
+    if (!isUnlocked_()){ toast_("Locked 🔒"); return; }
+    updateRoundDateBadge_();
+    renderScoreSheet_();
+  });
 
-  const record={
-    a,b,
-    aSets,bSets,
-    aPts,bPts,
-    aGamesTotal,bGamesTotal,
-    pairs,
-    ts:Date.now()
-  };
+  renderGate_();
 
-  const url=new URL(SHEETS_WEBAPP_URL);
-  url.searchParams.set("action","upsert");
-  url.searchParams.set("key",WRITE_KEY);
-  url.searchParams.set("matchKey",`r${r}_m${mIndex}`);
-  url.searchParams.set("record",JSON.stringify(record));
+  setCloudStatus_("Loading…", "warn", cloudReady_() ? "Reading from Google Sheets…" : "Missing Web App URL");
 
-  const res=await fetch(url.toString());
-  const json=await res.json();
-  alert(json.ok?"Saved":"Error: "+json.error);
+  (async ()=>{
+    try{
+      if (!cloudReady_()) throw new Error("Missing web app URL");
+      RESULTS = await cloudDump_();
+      setCloudStatus_("Connected", "good", "Live results loaded.");
+    } catch (e){
+      setCloudStatus_("Offline", "bad", e?.message || "Could not load from Sheets.");
+      RESULTS = {};
+    } finally {
+      if (isUnlocked_()){
+        populateRoundSelect_();
+        $("#roundSelect").value = "1";
+        populateMatchSelect_();
+        updateRoundDateBadge_();
+      }
+    }
+  })();
 }
 
-/* CLEAR */
-async function clearMatch(){
-  const r = Number(document.getElementById("roundSelect").value);
-  const mIndex = Number(document.getElementById("matchSelect").value);
-
-  const url=new URL(SHEETS_WEBAPP_URL);
-  url.searchParams.set("action","delete");
-  url.searchParams.set("key",WRITE_KEY);
-  url.searchParams.set("matchKey",`r${r}_m${mIndex}`);
-
-  const res=await fetch(url.toString());
-  const json=await res.json();
-  alert(json.ok?"Deleted":"Error: "+json.error);
-}
-
-/* RESET */
-async function resetAll(){
-  if(!confirm("Reset entire season?")) return;
-
-  const url=new URL(SHEETS_WEBAPP_URL);
-  url.searchParams.set("action","reset");
-  url.searchParams.set("key",WRITE_KEY);
-
-  const res=await fetch(url.toString());
-  const json=await res.json();
-  alert(json.ok?"All reset":"Error: "+json.error);
-}
-
+init_();
 </script>
 </body>
 </html>
