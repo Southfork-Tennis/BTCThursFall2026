@@ -755,7 +755,7 @@ async function cloudUpsert_(matchKey, record){
   url.searchParams.set("action","upsert");
   url.searchParams.set("key", API_KEY);
   url.searchParams.set("matchKey", matchKey);
-  url.searchParams.set("record", JSON.stringify(record)); // URLSearchParams safely encodes it
+  url.searchParams.set("record", JSON.stringify(record));
 
   const res = await fetch(url.toString(), { method:"GET" });
   if (!res.ok) throw new Error("Could not save to Google Sheets (upsert).");
