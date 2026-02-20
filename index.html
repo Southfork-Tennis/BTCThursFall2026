@@ -607,6 +607,35 @@ function teamChipHTML(teamId){
     </span>
   `;
 }
+  function positionTeamPopovers_(){
+  const chips = $$(".team-chip");
+  chips.forEach(chip=>{
+    chip.removeAttribute("data-pop-pos");
+    const pop = chip.querySelector(".team-pop");
+    if (!pop) return;
+
+    // Temporarily show invisibly so we can measure
+    const prevDisplay = pop.style.display;
+    const prevVis = pop.style.visibility;
+    pop.style.visibility = "hidden";
+    pop.style.display = "block";
+
+    const popRect = pop.getBoundingClientRect();
+    const chipRect = chip.getBoundingClientRect();
+
+    // If bottom would clip, flip to top
+    const wouldClipBottom = (chipRect.bottom + 8 + popRect.height) > window.innerHeight;
+    if (wouldClipBottom) chip.setAttribute("data-pop-pos","top");
+
+    // If it would clip top when flipped, remove flip (rare)
+    // (Optional safety)
+    // const wouldClipTop = (chipRect.top - 8 - popRect.height) < 0;
+    // if (wouldClipTop) chip.removeAttribute("data-pop-pos");
+
+    pop.style.display = prevDisplay;
+    pop.style.visibility = prevVis;
+  });
+}
 function attachTeamChipHandlers_(){
   document.addEventListener("click", (e)=>{
     const chip = e.target.closest?.(".team-chip");
