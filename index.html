@@ -732,51 +732,60 @@ function escapeHtml_(s){
 function matchId(roundNum, matchIndex){ return `r${roundNum}_m${matchIndex}`; }
 function teamName(id){ return teams[id]?.name ?? `Team ${id}`; }
 
-/* ---------- Cloud API ---------- */
+/* ---------- Cloud API (CORS-safe: GET only, no preflight) ---------- */
+
 function cloudReady_(){
   return SHEETS_WEBAPP_URL && !SHEETS_WEBAPP_URL.includes("PASTE_YOUR_WEB_APP_URL");
 }
+
 async function cloudDump_(){
   const url = new URL(SHEETS_WEBAPP_URL);
   url.searchParams.set("action","dump");
   url.searchParams.set("key", API_KEY);
+
   const res = await fetch(url.toString(), { method:"GET" });
   if (!res.ok) throw new Error("Could not load from Google Sheets (dump).");
   const json = await res.json();
   if (!json.ok) throw new Error(json.error || "Dump failed.");
   return json.results || {};
 }
+
 async function cloudUpsert_(matchKey, record){
-  const res = await fetch(SHEETS_WEBAPP_URL, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ action:"upsert", key: API_KEY, matchKey, record })
-  });
+  const url = new URL(SHEETS_WEBAPP_URL);
+  url.searchParams.set("action","upsert");
+  url.searchParams.set("key", API_KEY);
+  url.searchParams.set("matchKey", matchKey);
+  url.searchParams.set("record", JSON.stringify(record)); // URLSearchParams safely encodes it
+
+  const res = await fetch(url.toString(), { method:"GET" });
   if (!res.ok) throw new Error("Could not save to Google Sheets (upsert).");
   const json = await res.json();
   if (!json.ok) throw new Error(json.error || "Upsert failed.");
 }
+
 async function cloudDelete_(matchKey){
-  const res = await fetch(SHEETS_WEBAPP_URL, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ action:"delete", key: API_KEY, matchKey })
-  });
+  const url = new URL(SHEETS_WEBAPP_URL);
+  url.searchParams.set("action","delete");
+  url.searchParams.set("key", API_KEY);
+  url.searchParams.set("matchKey", matchKey);
+
+  const res = await fetch(url.toString(), { method:"GET" });
   if (!res.ok) throw new Error("Could not delete from Google Sheets.");
   const json = await res.json();
   if (!json.ok) throw new Error(json.error || "Delete failed.");
 }
+
 async function cloudReset_(){
-  const res = await fetch(SHEETS_WEBAPP_URL, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ action:"reset", key: API_KEY })
-  });
+  const url = new URL(SHEETS_WEBAPP_URL);
+  url.searchParams.set("action","reset");
+  url.searchParams.set("key", API_KEY);
+
+  const res = await fetch(url.toString(), { method:"GET" });
   if (!res.ok) throw new Error("Could not reset Google Sheets.");
   const json = await res.json();
   if (!json.ok) throw new Error(json.error || "Reset failed.");
 }
-
+  
 /* ---------- Team chip popover ---------- */
 function teamChipHTML(teamId){
   if (teamId == null) return `<span class="badge">Bye</span>`;
