@@ -727,7 +727,13 @@ let historyChartInstance = null;
 const $ = (sel)=>document.querySelector(sel);
 const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
 function escapeHtml_(s){
-  return String(s).replace(/[&<>"']/g, (c)=>({"&":"&amp;","<":"&lt;"," >":"&gt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c] || c));
+  return String(s).replace(/[&<>"']/g, (c)=>({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[c]));
 }
 function matchId(roundNum, matchIndex){ return `r${roundNum}_m${matchIndex}`; }
 function teamName(id){ return teams[id]?.name ?? `Team ${id}`; }
@@ -741,7 +747,7 @@ function cloudReady_(){
 async function cloudDump_(){
   const url = new URL(SHEETS_WEBAPP_URL);
   url.searchParams.set("action","dump");
-  url.searchParams.set("key", API_KEY);
+  
 
   const res = await fetch(url.toString(), { method:"GET" });
   if (!res.ok) throw new Error("Could not load from Google Sheets (dump).");
@@ -753,7 +759,7 @@ async function cloudDump_(){
 async function cloudUpsert_(matchKey, record){
   const url = new URL(SHEETS_WEBAPP_URL);
   url.searchParams.set("action","upsert");
-  url.searchParams.set("key", API_KEY);
+  
   url.searchParams.set("matchKey", matchKey);
   url.searchParams.set("record", JSON.stringify(record));
 
@@ -766,7 +772,7 @@ async function cloudUpsert_(matchKey, record){
 async function cloudDelete_(matchKey){
   const url = new URL(SHEETS_WEBAPP_URL);
   url.searchParams.set("action","delete");
-  url.searchParams.set("key", API_KEY);
+  
   url.searchParams.set("matchKey", matchKey);
 
   const res = await fetch(url.toString(), { method:"GET" });
@@ -778,7 +784,7 @@ async function cloudDelete_(matchKey){
 async function cloudReset_(){
   const url = new URL(SHEETS_WEBAPP_URL);
   url.searchParams.set("action","reset");
-  url.searchParams.set("key", API_KEY);
+  
 
   const res = await fetch(url.toString(), { method:"GET" });
   if (!res.ok) throw new Error("Could not reset Google Sheets.");
@@ -1677,13 +1683,18 @@ function toast_(msg){
 function populateHistoryTeams_(){
   const sel = $("#historyTeamSelect");
   if (!sel) return;
+
+  const prev = sel.value || "1";  // remember previous selection
   sel.innerHTML = "";
+
   Object.keys(teams).map(Number).sort((a,b)=>a-b).forEach(tid=>{
     const opt = document.createElement("option");
     opt.value = String(tid);
     opt.textContent = `${teamName(tid)}`;
     sel.appendChild(opt);
   });
+
+  sel.value = prev; // restore
 }
 
 function findMatchForTeamInRound_(teamId, round){
