@@ -373,7 +373,6 @@
       <button class="tab" data-view="home" aria-selected="true">Home</button>
       <button class="tab" data-view="teams">Teams</button>
       <button class="tab" data-view="fixtures">Fixtures</button>
-      <button class="tab" data-view="results" id="tab-results">Upload Scores 🔒</button>
       <button class="tab" data-view="ladder">Ladder</button>
       <button class="tab" data-view="finals">Finals</button>
       <button class="tab" data-view="players">Player Stats</button>
@@ -454,55 +453,7 @@
     </div>
   </section>
 
-  <!-- UPLOAD SCORES -->
-  <section id="view-results" class="view" hidden>
-    <div class="card">
-      <div class="hd">
-        <div class="row" style="justify-content:space-between">
-          <div>
-            <h2 class="title">Upload Scores</h2>
-            <div class="muted">Requires code: BTC1818</div>
-          </div>
-          <div class="row" id="resultsTools" hidden>
-            <button class="btn" id="btnClearMatch">Clear match</button>
-            <button class="btn danger" id="btnResetAll">Reset all</button>
-            <button class="btn" id="btnLock">Lock</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="bd">
-        <div id="gateArea" class="gateBox">
-          <div class="badge">Protected</div>
-          <div class="title" style="margin-top:10px">Enter access code</div>
-          <div class="muted" style="margin-top:6px">This limits score entry to captains / organisers.</div>
-          <div class="row" style="margin-top:12px">
-            <input id="gateCode" type="password" placeholder="Code" autocomplete="off" style="min-width:220px" />
-            <button class="btn primary" id="btnUnlock">Unlock</button>
-          </div>
-          <div class="hint" id="gateHint" style="margin-top:10px">Once unlocked, this device stays unlocked until you press “Lock”.</div>
-        </div>
-
-        <div id="resultsArea" hidden>
-          <div class="row" style="margin-bottom:12px">
-            <span class="hint">Round:</span>
-            <select id="roundSelect"></select>
-            <span class="hint">Match:</span>
-            <select id="matchSelect"></select>
-            <button class="btn primary" id="btnLoadSheet">Load score sheet</button>
-          </div>
-
-          <div class="row" style="margin-bottom:10px">
-            <span class="badge" id="cloudStatus">Loading…</span>
-            <span class="muted" id="cloudStatusMsg"></span>
-          </div>
-
-          <div id="sheetHost"></div>
-          <div class="foot">Enter games for each set. Standard format is 6–x (first to 6). Warnings are allowed; you can still save.</div>
-        </div>
-      </div>
-    </div>
-  </section>
+  
 
   <!-- LADDER -->
   <section id="view-ladder" class="view" hidden>
@@ -746,11 +697,8 @@ function cloudReady_(){
 }
 
 async function cloudDump_(){
-const url = new URL(SHEETS_WEBAPP_URL);
-url.searchParams.set("action","dump");
-url.searchParams.set("key", API_KEY);
-console.log("DUMP URL:", url.toString());
-  
+  const url = new URL(SHEETS_WEBAPP_URL);
+  url.searchParams.set("action","dump");
 
   const res = await fetch(url.toString(), { method:"GET" });
   if (!res.ok) throw new Error("Could not load from Google Sheets (dump).");
