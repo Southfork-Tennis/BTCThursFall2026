@@ -1573,6 +1573,7 @@ async function saveSheetCloud_(sheetEl, aTeamId, bTeamId, computed){
     rerenderAll_();
 
   } catch (e){
+    console.error("Save error:", e);
     setCloudStatus_("Save failed", "bad", e?.message || "Could not save.");
     alert(e?.message || "Save failed");
   }
