@@ -1036,7 +1036,7 @@ function renderLadder(){
   $("#kpiRoundsDone").textContent = String(roundsDone);
   $("#kpiMatchesDone").textContent = String(matchCount);
 
-  const leader = ladder[0]?.teamId;
+  const leader = ladder[0]?.name;
   $("#kpiTopTeam").textContent = leader ? `Team ${leader}` : "—";
 
   const players = buildPlayerStats();
