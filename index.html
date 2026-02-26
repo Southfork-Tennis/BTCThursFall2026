@@ -3,616 +3,93 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Berwick Tennis Club — Thursday Night Comp (Autumn 2026)</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
+  <title>BTC Admin — Score Entry</title>
   <style>
-    :root {
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #1e293b;
-      --muted: #64748b;
-      --accent: #2563eb; /* Berwick Blue */
-      --accent-light: #dbeafe;
-      --border: #e2e8f0;
-      --good: #10b981;
-      --warn: #f59e0b;
-      --bad: #ef4444;
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-      --radius: 12px;
-    }
-
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-    }
-
-    header {
-      position: sticky; top: 0; z-index: 100;
-      background: #ffffff;
-      border-bottom: 2px solid var(--accent);
-      box-shadow: var(--shadow);
-    }
-
-    .wrap { max-width: 1150px; margin: 0 auto; padding: 1rem; }
-    
-    .top { display: flex; flex-direction: column; gap: 1rem; }
-    @media (min-width: 900px) {
-      .top { flex-direction: row; justify-content: space-between; align-items: center; }
-    }
-
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand h1 { font-size: 1.25rem; margin: 0; color: var(--accent); font-weight: 800; }
-    .brand .sub { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
-
-    nav { display: flex; gap: 0.5rem; overflow-x: auto; padding: 0.25rem 0; scrollbar-width: none; -ms-overflow-style: none; }
-    nav::-webkit-scrollbar { display: none; }
-    
-    .tab {
-      background: white; border: 1px solid var(--border); color: var(--muted);
-      padding: 0.6rem 1.1rem; border-radius: 99px; cursor: pointer;
-      font-size: 0.85rem; font-weight: 600; white-space: nowrap; transition: 0.2s;
-    }
-    .tab[aria-selected="true"] { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-
-    .grid { display: grid; gap: 1.25rem; }
-    .grid.two { grid-template-columns: 1fr; }
-    @media (min-width: 900px) { .grid.two { grid-template-columns: 1.15fr 0.85fr; } }
-
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 1.25rem; overflow: hidden; }
-    .card-hd { padding: 1.25rem; border-bottom: 1px solid var(--border); background: #fafafa; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
-    .card-bd { padding: 1.25rem; }
-    .title { font-size: 1.1rem; margin: 0; font-weight: 700; color: #1e293b; }
-
-    .pill { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-light); color: var(--accent); padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
-
-    .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid var(--border); }
-    table { width: 100%; border-collapse: collapse; min-width: 600px; background: white; }
-    th { text-align: left; padding: 1rem; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--border); background: #f8fafc; }
-    td { padding: 1rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: #334155; }
-    tr:hover td { background: #f1f5f9; }
-    .right { text-align: right; }
-    .center { text-align: center; }
-
-    .kpi { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-    @media (min-width: 768px) { .kpi { grid-template-columns: repeat(4, 1fr); } }
-    .k { padding: 1.25rem; background: #ffffff; border-radius: 12px; border: 1px solid var(--border); transition: transform 0.2s; }
-    .k:hover { transform: translateY(-2px); border-color: var(--accent); }
-    .k .n { font-size: 1.5rem; font-weight: 800; color: var(--accent); display: block; }
-    .k .l { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-top: 4px; }
-
-    .btn { padding: 0.6rem 1.2rem; border-radius: 8px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 0.85rem; font-weight: 700; color: #475569; transition: 0.2s; }
-    .btn.primary { background: var(--accent); color: white; border: none; }
-    .btn:hover { border-color: var(--accent); background: #f8fafc; }
-
-    /* Team chip popover */
-    .team-chip { position: relative; font-weight: 700; color: var(--accent); cursor: pointer; padding: 2px 4px; border-radius: 4px; }
-    .team-chip:hover { background: var(--accent-light); }
-    .team-pop { position: absolute; top: calc(100% + 8px); left: 0; min-width: 240px; background: white; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 12px; display: none; z-index: 50; color: var(--text); }
-    .team-chip:hover .team-pop { display: block; }
-    .team-pop .hdr { font-weight: 800; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px; font-size: 0.9rem; color: var(--accent); }
-    .team-pop .p { font-size: 0.85rem; padding: 4px 0; display: flex; justify-content: space-between; font-weight: 400; color: #475569; }
-    .team-pop .rank { color: var(--muted); font-weight: 700; margin-right: 8px; }
-
-    /* Finals styling */
-    .bracket { display: grid; gap: 1.5rem; }
-    .stage { border: 1px solid var(--border); border-radius: 12px; background: white; padding: 1.25rem; }
-    .stage b { color: var(--accent); font-size: 0.95rem; }
-    .stage .match { margin-top: 10px; font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
-    .stage .subline { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
-
-    /* History & Chart */
-    .chartCard { border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; background: white; }
-    .chartWrap { position: relative; width: 100%; height: 350px; }
-
-    @media print { header, nav, .btn, .pill { display: none !important; } .card { box-shadow: none; border: 1px solid #000; } }
+    :root { --bg: #f8fafc; --accent: #2563eb; --text: #1e293b; --border: #cbd5e1; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+    .wrap { max-width: 600px; margin: 0 auto; padding: 1.5rem; }
+    header { background: #fff; padding: 1rem; border-bottom: 2px solid var(--accent); font-weight: 800; color: var(--accent); text-align: center; }
+    .card { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem; }
+    label { display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 0.5rem; }
+    select, input { width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1rem; font-size: 1rem; }
+    .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 0.5rem 0; border-bottom: 1px solid #f1f5f9; }
+    .btn { width: 100%; padding: 1rem; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; background: var(--accent); color: white; }
   </style>
 </head>
-
 <body>
-<header>
-  <div class="wrap top">
-    <div class="brand">
-      <div>
-        <h1>Berwick Tennis Club</h1>
-        <div class="sub">Thursday Night Comp • Autumn 2026 • 7 Teams</div>
-      </div>
-    </div>
-    <nav aria-label="Sections">
-      <button class="tab" data-view="home" aria-selected="true">Home</button>
-      <button class="tab" data-view="ladder">Ladder</button>
-      <button class="tab" data-view="fixtures">Fixtures</button>
-      <button class="tab" data-view="players">Player Stats</button>
-      <button class="tab" data-view="history">Match History 📊</button>
-      <button class="tab" data-view="finals">Finals</button>
-      <button class="tab" data-view="rules">Rules</button>
-    </nav>
+<header>BTC ADMIN PORTAL</header>
+<div class="wrap">
+  <div id="gateArea" class="card">
+    <label>Access Code</label>
+    <input type="password" id="gateCode" placeholder="••••">
+    <button class="btn" id="btnUnlock">Unlock</button>
   </div>
-</header>
-
-<main class="wrap">
-  <section id="view-home" class="view">
-    <div class="grid two">
-      <div class="card">
-        <div class="card-hd">
-          <h2 class="title">Next Round</h2>
-          <span class="pill"><span class="dot"></span><span id="nextRoundPill">Loading…</span></span>
-        </div>
-        <div class="card-bd">
-          <div id="nextRoundDate" style="font-weight: 700; color: var(--muted); margin-bottom: 1rem;"></div>
-          <div id="nextRoundMatches"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-hd"><h2 class="title">Season Snapshot</h2></div>
-        <div class="card-bd">
-          <div class="kpi">
-            <div class="k"><span class="n" id="kpiRoundsDone">0</span><span class="l">Rounds Done</span></div>
-            <div class="k"><span class="n" id="kpiMatchesDone">0</span><span class="l">Matches</span></div>
-            <div class="k"><span class="n" id="kpiTopTeam">—</span><span class="l">Ladder Leader</span></div>
-            <div class="k"><span class="n" id="kpiTopPlayer">—</span><span class="l">Top MVP</span></div>
-          </div>
-          <div style="margin-top: 1.25rem;">
-            <button class="btn primary" onclick="window.print()">Print Season Summary</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
+  <div id="adminArea" hidden>
     <div class="card">
-      <div class="card-hd"><h2 class="title">Latest Results</h2></div>
-      <div class="card-bd table-wrap" id="latestResults"></div>
+      <label>Match Selection</label>
+      <select id="roundSelect"></select>
+      <select id="matchSelect"></select>
+      <button class="btn" id="btnLoad">Load Match</button>
     </div>
-  </section>
-
-  <section id="view-ladder" class="view" hidden>
-    <div class="card">
-      <div class="card-hd"><h2 class="title">Competition Ladder</h2></div>
-      <div class="card-bd">
-        <div class="table-wrap" id="ladderTable"></div>
-        <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--muted);">
-          <b>Tie-breakers:</b> Points → Set Differential → Sets Won → Head-to-Head.
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="view-fixtures" class="view" hidden>
-    <div class="card">
-      <div class="card-hd">
-        <h2 class="title">Fixtures & Scores</h2>
-        <div style="display: flex; gap: 8px;">
-          <select id="roundJump" class="btn" style="padding: 4px 12px;"></select>
-          <button class="btn primary" id="btnGo">Jump</button>
-        </div>
-      </div>
-      <div class="card-bd" id="fixturesList"></div>
-    </div>
-  </section>
-
-  <section id="view-players" class="view" hidden>
-    <div class="card">
-      <div class="card-hd"><h2 class="title">Player Rankings</h2></div>
-      <div class="card-bd">
-        <div class="table-wrap" id="playerStatsTable"></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="view-history" class="view" hidden>
-    <div class="grid two">
-      <div class="card">
-        <div class="card-hd">
-          <h2 class="title">Team Performance</h2>
-          <select id="historyTeamSelect" class="btn"></select>
-        </div>
-        <div class="card-bd">
-          <div class="chartCard">
-            <div class="chartWrap"><canvas id="historyChart"></canvas></div>
-          </div>
-          <div class="grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 1rem;" id="historyKpis"></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-hd"><h2 class="title">Match Log</h2></div>
-        <div class="card-bd table-wrap" id="historyTable"></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="view-finals" class="view" hidden>
-    <div class="grid two">
-      <div class="card">
-        <div class="card-hd">
-          <h2 class="title">Live Finals Bracket</h2>
-          <span class="pill" id="finalsStatusPill">Projected Standings</span>
-        </div>
-        <div class="card-bd" id="finalsBracket"></div>
-      </div>
-      <div class="card">
-        <div class="card-hd"><h2 class="title">Finals Schedule</h2></div>
-        <div class="card-bd">
-          <table>
-            <thead><tr><th>Stage</th><th>Date</th></tr></thead>
-            <tbody>
-              <tr><td>Semi Finals</td><td>20-May-26</td></tr>
-              <tr><td>Preliminary Final</td><td>27-May-26</td></tr>
-              <tr><td>Grand Final</td><td>03-Jun-26</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="view-rules" class="view" hidden>
-    <div class="card">
-      <div class="card-hd"><h2 class="title">Rules & Scoring</h2></div>
-      <div class="card-bd">
-        <ul style="padding-left: 20px;">
-          <li><b>Format:</b> 6 sets of doubles.</li>
-          <li><b>Order:</b> 1+2, 3+4, 1+3, 2+4, 1+4, 2+3.</li>
-          <li><b>Points:</b> 1 point per set won. 2 bonus points for winning the night (total sets).</li>
-          <li><b>Sets:</b> First team to 6 games.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-</main>
-
+    <div id="sheetHost"></div>
+  </div>
+</div>
 <script>
-/* CONFIGURATION */
 const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw8GVO1VqmhHyNhgoVr25lvkROu0D0lrqDA0RQqNQ0e3nxs8ZpJl_uXJe0XIvJjt-H1BQ/exec";
-const READ_KEY = "BTC1818";
+const API_KEY = "BTC1818";
 
 const teams = {
-  1:{ name:"Team Cooper", players:["Cooper Khalil","Simran Chawla","David Sutton","Chris Maniatakis"] },
-  2:{ name:"Team Enrique", players:["Enrique Lopez","Craig Kitner","Josh Bury","Varun Sridhara"] },
-  3:{ name:"Team Michael", players:["Michael Rominger","David Ng","Cameron Rush","Alan Chumacero"] },
-  4:{ name:"Team Jono", players:["Jonathan Rogers","Rafa Bouzinelos","David Thurmond","Andrew Watson"] },
-  5:{ name:"Team Chung", players:["Chung Tan","Huss Shafai","Tom Maloney","Brett Kurz"] },
-  6:{ name:"Team Vignesh", players:["Vignesh Pakkiam","Eric Castricum","Stephen Saunders","Mark Findlay"] },
-  7:{ name:"Team Chris", players:["Chris Scott","Justin Hermann","Nick Teo","Dishit Devasia"] },
+  1:{ name:"Team Cooper" }, 2:{ name:"Team Enrique" }, 3:{ name:"Team Michael" },
+  4:{ name:"Team Jono" }, 5:{ name:"Team Chung" }, 6:{ name:"Team Vignesh" }, 7:{ name:"Team Chris" }
+};
+const rounds = Array.from({length: 14}, (_, i) => ({
+  r: i+1,
+  m: [[1,6],[2,5],[3,4],[7,null], [4,2],[5,1],[6,7],[3,null], [2,7],[3,6],[4,5],[1,null], [5,3],[6,2],[7,1],[4,null], [3,1],[4,7],[5,6],[2,null], [6,4],[7,3],[1,2],[5,null], [7,5],[1,4],[2,3],[6,null]].slice(i*4, (i+1)*4)
+}));
+
+const rs = document.getElementById("roundSelect");
+rounds.forEach(r => { let opt = document.createElement("option"); opt.value = r.r; opt.textContent = `Round ${r.r}`; rs.appendChild(opt); });
+
+rs.onchange = () => {
+  const ms = document.getElementById("matchSelect"); ms.innerHTML = "";
+  rounds.find(x => x.r == rs.value).m.forEach((m, i) => {
+    if (m[1]) { let opt = document.createElement("option"); opt.value = i; opt.textContent = `${teams[m[0]].name} vs ${teams[m[1]].name}`; ms.appendChild(opt); }
+  });
+};
+rs.onchange();
+
+document.getElementById("btnUnlock").onclick = () => {
+  if (document.getElementById("gateCode").value === "BTC1818") {
+    document.getElementById("gateArea").hidden = true;
+    document.getElementById("adminArea").hidden = false;
+  }
 };
 
-const rounds = [
-  { r:1,  date:"05-Feb-26", matches:[[1,6],[2,5],[3,4],[7,null]] },
-  { r:2,  date:"12-Feb-26", matches:[[4,2],[5,1],[6,7],[3,null]] },
-  { r:3,  date:"19-Feb-26", matches:[[2,7],[3,6],[4,5],[1,null]] },
-  { r:4,  date:"26-Feb-26", matches:[[5,3],[6,2],[7,1],[4,null]] },
-  { r:5,  date:"05-Mar-26", matches:[[3,1],[4,7],[5,6],[2,null]] },
-  { r:6,  date:"12-Mar-26", matches:[[6,4],[7,3],[1,2],[5,null]] },
-  { r:7,  date:"19-Mar-26", matches:[[7,5],[1,4],[2,3],[6,null]] },
-  { r:8,  date:"26-Mar-26", matches:[[1,6],[2,5],[3,4],[7,null]] },
-  { r:9,  date:"23-Apr-26", matches:[[4,2],[5,1],[6,7],[3,null]] },
-  { r:10, date:"30-Apr-26", matches:[[2,7],[3,6],[4,5],[1,null]] },
-  { r:11, date:"07-May-26", matches:[[5,3],[6,2],[7,1],[4,null]] },
-  { r:12, date:"14-May-26", matches:[[3,1],[4,7],[5,6],[2,null]] },
-  { r:13, date:"21-May-26", matches:[[6,4],[7,3],[1,2],[5,null]] },
-  { r:14, date:"28-May-26", matches:[[7,5],[1,4],[2,3],[6,null]] },
-];
-
-const pairings = [
-  { key:"12", label:"1+2", a:[1,2], b:[1,2] },
-  { key:"34", label:"3+4", a:[3,4], b:[3,4] },
-  { key:"13", label:"1+3", a:[1,3], b:[1,3] },
-  { key:"24", label:"2+4", a:[2,4], b:[2,4] },
-  { key:"14", label:"1+4", a:[1,4], b:[1,4] },
-  { key:"23", label:"2+3", a:[2,3], b:[2,3] },
-];
-
-/* STATE */
-let RESULTS = {};
-let historyChartInstance = null;
-const $ = (s) => document.querySelector(s);
-const $$ = (s) => Array.from(document.querySelectorAll(s));
-
-/* HELPERS */
-function teamName(id) { return teams[id]?.name ?? `Team ${id}`; }
-function matchId(r, idx) { return `r${r}_m${idx}`; }
-
-function teamChipHTML(id) {
-  if (id == null) return `<span class="badge">Bye</span>`;
-  const t = teams[id];
-  const pList = t.players.map((p, i) => `<div class="p"><span class="rank">#${i+1}</span>${p}</div>`).join("");
-  return `
-    <span class="team-chip" data-id="${id}">
-      ${t.name}
-      <div class="team-pop">
-        <div class="hdr">Team ${id} Lineup</div>
-        ${pList}
-      </div>
-    </span>
+document.getElementById("btnLoad").onclick = () => {
+  const r = rs.value; const mi = document.getElementById("matchSelect").value;
+  const match = rounds.find(x => x.r == r).m[mi];
+  const tA = match[0], tB = match[1];
+  
+  const pairs = ["12", "34", "13", "24", "14", "23"];
+  document.getElementById("sheetHost").innerHTML = `
+    <div class="card">
+      <h3>${teams[tA].name} vs ${teams[tB].name}</h3>
+      ${pairs.map(p => `<div class="score-grid"><span>Set ${p.split('').join('+')}</span><input type="number" class="sa" data-p="${p}" placeholder="Home"> <input type="number" class="sb" data-p="${p}" placeholder="Away"></div>`).join("")}
+      <button class="btn" id="btnSave" style="margin-top:1rem">Save Scores</button>
+    </div>
   `;
-}
 
-/* DATA FETCHING */
-async function cloudDump() {
-  const url = `${SHEETS_WEBAPP_URL}?action=dump&key=${READ_KEY}`;
-  const res = await fetch(url);
-  const json = await res.json();
-  return json.results || {};
-}
-
-/* LOGIC - LADDER */
-function buildLadder() {
-  const base = {};
-  Object.keys(teams).forEach(id => {
-    base[id] = { id: Number(id), played: 0, points: 0, setsW: 0, setsL: 0, gamesW: 0, gamesL: 0, nightsW: 0, nightsL: 0, nightsT: 0 };
-  });
-
-  Object.values(RESULTS).forEach(m => {
-    if (!m.a || !m.b) return;
-    const A = base[m.a], B = base[m.b];
-    A.played++; B.played++;
-    A.points += m.aPts; B.points += m.bPts;
-    A.setsW += m.aSets; A.setsL += m.bSets;
-    B.setsW += m.bSets; B.setsL += m.aSets;
-    A.gamesW += m.aGamesTotal || 0; A.gamesL += m.bGamesTotal || 0;
-    B.gamesW += m.bGamesTotal || 0; B.gamesL += m.aGamesTotal || 0;
-    if (m.aSets > m.bSets) { A.nightsW++; B.nightsL++; }
-    else if (m.bSets > m.aSets) { B.nightsW++; A.nightsL++; }
-    else { A.nightsT++; B.nightsT++; }
-  });
-
-  return Object.values(base).sort((a, b) => {
-    const p = b.points - a.points; if (p) return p;
-    const sd = (b.setsW - b.setsL) - (a.setsW - a.setsL); if (sd) return sd;
-    const sw = b.setsW - a.setsW; if (sw) return sw;
-    return a.id - b.id;
-  });
-}
-
-/* LOGIC - PLAYER STATS */
-function buildPlayerStats() {
-  const stats = {};
-  Object.keys(teams).forEach(tid => {
-    teams[tid].players.forEach(p => stats[p] = { name: p, tid: Number(tid), sW: 0, sP: 0, gW: 0, gP: 0 });
-  });
-
-  Object.values(RESULTS).forEach(m => {
-    if (!m.pairs) return;
-    const teamA = teams[m.a], teamB = teams[m.b];
-    pairings.forEach(pr => {
-      const res = m.pairs[pr.key];
-      if (!res || res.a === null) return;
-      const ag = res.a, bg = res.b;
-      pr.a.forEach(idx => {
-        const p = teamA.players[idx-1];
-        stats[p].sP++; stats[p].gP += (ag + bg); stats[p].gW += ag;
-        if (ag > bg) stats[p].sW++;
-      });
-      pr.b.forEach(idx => {
-        const p = teamB.players[idx-1];
-        stats[p].sP++; stats[p].gP += (ag + bg); stats[p].gW += bg;
-        if (bg > ag) stats[p].sW++;
-      });
+  document.getElementById("btnSave").onclick = async () => {
+    const pData = {}; let sA = 0, sB = 0;
+    document.querySelectorAll(".sa").forEach((el, i) => {
+      const a = Number(el.value), b = Number(document.querySelectorAll(".sb")[i].value);
+      pData[el.dataset.p] = { a, b }; if (a > b) sA++; else if (b > a) sB++;
     });
-  });
-
-  return Object.values(stats).sort((a,b) => b.sW - a.sW || b.gW - a.gW || (b.sW/b.sP) - (a.sW/a.sP));
-}
-
-/* RENDERING */
-function renderHome() {
-  const ladder = buildLadder();
-  const players = buildPlayerStats();
-  const next = rounds.find(r => r.matches.some((m, idx) => m[1] && !RESULTS[matchId(r.r, idx)])) || rounds[13];
-
-  $("#nextRoundPill").textContent = `Round ${next.r}`;
-  $("#nextRoundDate").textContent = next.date;
-  $("#nextRoundMatches").innerHTML = next.matches.map((m, idx) => `
-    <div style="padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-      <span>${teamChipHTML(m[0])} <small>vs</small> ${m[1] ? teamChipHTML(m[1]) : 'BYE'}</span>
-      <span class="badge">${RESULTS[matchId(next.r, idx)] ? 'Recorded' : 'Upcoming'}</span>
-    </div>
-  `).join("");
-
-  $("#kpiRoundsDone").textContent = new Set(Object.keys(RESULTS).map(k => k.split("_")[0])).size;
-  $("#kpiMatchesDone").textContent = Object.keys(RESULTS).length;
-  $("#kpiTopTeam").textContent = ladder[0] ? `Team ${ladder[0].id}` : "—";
-  $("#kpiTopPlayer").textContent = players[0]?.name.split(" ")[0] || "—";
-
-  const latest = Object.entries(RESULTS).sort((a,b) => b[1].ts - a[1].ts).slice(0, 5);
-  $("#latestResults").innerHTML = `
-    <table>
-      <thead><tr><th>Matchup</th><th class="right">Sets</th><th class="right">Points</th><th class="right">Total Games</th></tr></thead>
-      <tbody>
-        ${latest.map(([key, m]) => `
-          <tr>
-            <td>${teamChipHTML(m.a)} <small>vs</small> ${teamChipHTML(m.b)}</td>
-            <td class="right"><b>${m.aSets}–${m.bSets}</b></td>
-            <td class="right"><span class="pill">${m.aPts}–${m.bPts}</span></td>
-            <td class="right">${m.aGamesTotal}–${m.bGamesTotal}</td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-  `;
-}
-
-function renderLadder() {
-  const data = buildLadder();
-  $("#ladderTable").innerHTML = `
-    <table>
-      <thead>
-        <tr><th>#</th><th>Team</th><th class="right">P</th><th class="right">Pts</th><th class="right">Sets W-L</th><th class="right">Diff</th><th class="right">W-L-T</th></tr>
-      </thead>
-      <tbody>
-        ${data.map((r, i) => `
-          <tr>
-            <td>${i+1}</td>
-            <td>${teamChipHTML(r.id)}</td>
-            <td class="right">${r.played}</td>
-            <td class="right"><b>${r.points}</b></td>
-            <td class="right">${r.setsW}–${r.setsL}</td>
-            <td class="right">${r.setsW - r.setsL}</td>
-            <td class="right">${r.nightsW}-${r.nightsL}-${r.nightsT}</td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-  `;
-}
-
-function renderPlayerStats() {
-  const data = buildPlayerStats().filter(p => p.sP > 0);
-  $("#playerStatsTable").innerHTML = `
-    <table>
-      <thead>
-        <tr><th>Player</th><th>Team</th><th class="right">Sets Won</th><th class="right">Games Won</th><th class="right">Sets Played</th><th class="right">Win %</th></tr>
-      </thead>
-      <tbody>
-        ${data.map(p => `
-          <tr>
-            <td><b>${p.name}</b></td>
-            <td>${teamName(p.tid)}</td>
-            <td class="right"><b>${p.sW}</b></td>
-            <td class="right">${p.gW}</td>
-            <td class="right">${p.sP}</td>
-            <td class="right">${Math.round((p.sW/p.sP)*100)}%</td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-  `;
-}
-
-function renderHistory() {
-  const tid = Number($("#historyTeamSelect").value) || 1;
-  const dataPoints = [];
-  let cumulative = 0;
-  
-  const historyLog = rounds.map(r => {
-    const matchKey = Object.keys(RESULTS).find(k => k.startsWith(`r${r.r}_`) && (RESULTS[k].a === tid || RESULTS[k].b === tid));
-    let roundPoints = 0;
-    let detail = "BYE";
-    if (matchKey) {
-      const m = RESULTS[matchKey];
-      roundPoints = (m.a === tid ? m.aPts : m.bPts);
-      cumulative += roundPoints;
-      detail = `${m.aSets}-${m.bSets}`;
-    } else if (rounds.find(ro => ro.r === r.r).matches.some(ma => ma[0] === tid || ma[1] === tid)) {
-      detail = "Upcoming";
-    }
-    dataPoints.push(cumulative);
-    return { r: r.r, date: r.date, detail, pts: roundPoints, cum: cumulative };
-  });
-
-  if (historyChartInstance) historyChartInstance.destroy();
-  historyChartInstance = new Chart($("#historyChart"), {
-    type: 'line',
-    data: {
-      labels: rounds.map(r => `R${r.r}`),
-      datasets: [{
-        label: `${teamName(tid)} Points Progression`,
-        data: dataPoints,
-        borderColor: '#2563eb',
-        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-        fill: true,
-        tension: 0.3
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  $("#historyTable").innerHTML = `
-    <table>
-      <thead><tr><th>Round</th><th>Score</th><th class="right">Pts</th><th class="right">Cum.</th></tr></thead>
-      <tbody>${historyLog.map(h => `<tr><td>R${h.r} <small>${h.date}</small></td><td>${h.detail}</td><td class="right">${h.pts}</td><td class="right"><b>${h.cum}</b></td></tr>`).join("")}</tbody>
-    </table>
-  `;
-}
-
-function renderFinals() {
-  const ladder = buildLadder();
-  const top4 = ladder.slice(0, 4);
-  const [t1, t2, t3, t4] = top4;
-
-  $("#finalsBracket").innerHTML = `
-    <div class="bracket">
-      <div class="stage">
-        <b>Qualifying (1st vs 2nd)</b>
-        <div class="match">${t1 ? teamChipHTML(t1.id) : '?'} <small>vs</small> ${t2 ? teamChipHTML(t2.id) : '?'}</div>
-        <div class="subline">Winner to Grand Final • Loser to Preliminary</div>
-      </div>
-      <div class="stage">
-        <b>Elimination (3rd vs 4th)</b>
-        <div class="match">${t3 ? teamChipHTML(t3.id) : '?'} <small>vs</small> ${t4 ? teamChipHTML(t4.id) : '?'}</div>
-        <div class="subline">Winner to Preliminary • Loser Eliminated</div>
-      </div>
-    </div>
-  `;
-}
-
-function setView(view) {
-  $$(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.view === view));
-  $$(".view").forEach(v => v.hidden = true);
-  $(`#view-${view}`).hidden = false;
-  if (view === 'history') renderHistory();
-}
-
-/* INITIALIZATION */
-(async () => {
-  try {
-    RESULTS = await cloudDump();
-  } catch (e) {
-    console.error("Cloud connection failed", e);
-  }
-
-  // Init UI
-  const rj = $("#roundJump");
-  rounds.forEach(r => {
-    const opt = document.createElement("option");
-    opt.value = r.r; opt.textContent = `Round ${r.r}`;
-    rj.appendChild(opt);
-  });
-  $("#btnGo").onclick = () => {
-    setView('fixtures');
-    const target = document.getElementById(`round-${rj.value}`);
-    if (target) target.scrollIntoView({ behavior: 'smooth' });
+    const record = { r: Number(r), a: tA, b: tB, aSets: sA, bSets: sB, aPts: sA + (sA>sB?2:0), bPts: sB + (sB>sA?2:0), pairs: pData, ts: Date.now() };
+    const res = await fetch(`${SHEETS_WEBAPP_URL}?action=upsert&key=${API_KEY}&matchKey=r${r}_m${mi}&record=${encodeURIComponent(JSON.stringify(record))}`);
+    if (res.ok) alert("Saved!");
   };
-
-  const ts = $("#historyTeamSelect");
-  Object.keys(teams).forEach(id => {
-    const opt = document.createElement("option");
-    opt.value = id; opt.textContent = teamName(id);
-    ts.appendChild(opt);
-  });
-  ts.onchange = renderHistory;
-
-  $("#fixturesList").innerHTML = rounds.map(r => `
-    <div class="card" id="round-${r.r}">
-      <div class="card-hd"><h2 class="title">Round ${r.r} - ${r.date}</h2></div>
-      <div class="card-bd">
-        <table>
-          ${r.matches.map((m, idx) => {
-            const res = RESULTS[matchId(r.r, idx)];
-            return `
-              <tr>
-                <td>${teamChipHTML(m[0])} vs ${m[1] ? teamChipHTML(m[1]) : 'BYE'}</td>
-                <td class="right">${res ? `<b>${res.aSets}–${res.bSets}</b> <small>(${res.aPts}–${res.bPts})</small>` : '—'}</td>
-              </tr>`;
-          }).join("")}
-        </table>
-      </div>
-    </div>
-  `).join("");
-
-  $$(".tab").forEach(t => t.onclick = () => setView(t.dataset.view));
-  
-  renderHome();
-  renderLadder();
-  renderPlayerStats();
-  renderFinals();
-})();
+};
 </script>
 </body>
 </html>
