@@ -3,93 +3,318 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BTC Admin — Score Entry</title>
+  <title>Berwick Tennis Club — Thursday Night Comp (Autumn 2026)</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
   <style>
-    :root { --bg: #f8fafc; --accent: #2563eb; --text: #1e293b; --border: #cbd5e1; }
-    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
-    .wrap { max-width: 600px; margin: 0 auto; padding: 1.5rem; }
-    header { background: #fff; padding: 1rem; border-bottom: 2px solid var(--accent); font-weight: 800; color: var(--accent); text-align: center; }
-    .card { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem; }
-    label { display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 0.5rem; }
-    select, input { width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1rem; font-size: 1rem; }
-    .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 0.5rem 0; border-bottom: 1px solid #f1f5f9; }
-    .btn { width: 100%; padding: 1rem; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; background: var(--accent); color: white; }
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --accent: #2563eb; 
+      --accent-light: #dbeafe;
+      --border: #e2e8f0;
+      --good: #10b981;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: #ffffff;
+      border-bottom: 2px solid var(--accent);
+      box-shadow: var(--shadow);
+    }
+
+    .wrap { max-width: 1150px; margin: 0 auto; padding: 1rem; }
+    
+    .top { display: flex; flex-direction: column; gap: 1rem; }
+    @media (min-width: 900px) {
+      .top { flex-direction: row; justify-content: space-between; align-items: center; }
+    }
+
+    .brand h1 { font-size: 1.25rem; margin: 0; color: var(--accent); font-weight: 800; }
+    .brand .sub { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+
+    nav { display: flex; gap: 0.5rem; overflow-x: auto; padding: 0.25rem 0; scrollbar-width: none; }
+    nav::-webkit-scrollbar { display: none; }
+    
+    .tab {
+      background: white; border: 1px solid var(--border); color: var(--muted);
+      padding: 0.6rem 1.1rem; border-radius: 99px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; white-space: nowrap; transition: 0.2s;
+    }
+    .tab[aria-selected="true"] { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 1.25rem; overflow: hidden; }
+    .card-hd { padding: 1.25rem; border-bottom: 1px solid var(--border); background: #fafafa; display: flex; justify-content: space-between; align-items: center; }
+    .card-bd { padding: 1.25rem; }
+
+    /* Sticky Header Table Styling */
+    .table-container { 
+      max-height: 70vh; 
+      overflow-y: auto; 
+      border: 1px solid var(--border); 
+      border-radius: 8px;
+    }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    
+    thead th { 
+      position: sticky; 
+      top: 0; 
+      background: #f8fafc; 
+      z-index: 10; 
+      box-shadow: inset 0 -2px 0 var(--border); 
+      text-align: left;
+      padding: 1rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    td { padding: 1rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: #334155; }
+    tr:hover td { background: #f1f5f9; }
+    .right { text-align: right; }
+
+    .chartWrap { position: relative; width: 100%; height: 450px; margin-top: 1rem; }
+
+    .kpi { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    @media (min-width: 768px) { .kpi { grid-template-columns: repeat(4, 1fr); } }
+    .k { padding: 1rem; background: #eff6ff; border-radius: 12px; text-align: center; border: 1px solid #dbeafe; }
+    .k .n { font-size: 1.5rem; font-weight: 800; color: var(--accent); display: block; }
+    .k .l { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; font-weight: 700; }
+
+    .view[hidden] { display: none; }
   </style>
 </head>
 <body>
-<header>BTC ADMIN PORTAL</header>
-<div class="wrap">
-  <div id="gateArea" class="card">
-    <label>Access Code</label>
-    <input type="password" id="gateCode" placeholder="••••">
-    <button class="btn" id="btnUnlock">Unlock</button>
-  </div>
-  <div id="adminArea" hidden>
-    <div class="card">
-      <label>Match Selection</label>
-      <select id="roundSelect"></select>
-      <select id="matchSelect"></select>
-      <button class="btn" id="btnLoad">Load Match</button>
+
+<header>
+  <div class="wrap top">
+    <div class="brand">
+      <h1>Berwick Tennis Club</h1>
+      <div class="sub">Thursday Night Comp • Autumn 2026</div>
     </div>
-    <div id="sheetHost"></div>
+    <nav>
+      <button class="tab" data-view="home" aria-selected="true">Home</button>
+      <button class="tab" data-view="ladder">Ladder</button>
+      <button class="tab" data-view="players">Player Stats</button>
+      <button class="tab" data-view="history">Match History 📊</button>
+    </nav>
   </div>
-</div>
+</header>
+
+<main class="wrap">
+  <section id="view-home" class="view">
+    <div class="kpi">
+      <div class="k"><span class="n" id="kpiRounds">0</span><span class="l">Rounds Played</span></div>
+      <div class="k"><span class="n" id="kpiLeader">—</span><span class="l">Ladder Leader</span></div>
+      <div class="k"><span class="n" id="kpiMVP">—</span><span class="l">Top Player</span></div>
+      <div class="k"><span class="n" id="kpiMatches">0</span><span class="l">Matches Logged</span></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><b>Recent Results</b></div>
+      <div class="card-bd" id="latestResults">Connecting to Google Sheets...</div>
+    </div>
+  </section>
+
+  <section id="view-ladder" class="view" hidden>
+    <div class="card">
+      <div class="card-hd"><b>Competition Ladder</b></div>
+      <div class="card-bd" id="ladderTable"></div>
+    </div>
+  </section>
+
+  <section id="view-players" class="view" hidden>
+    <div class="card">
+      <div class="card-hd"><b>Player Statistics (Sticky Header)</b></div>
+      <div class="card-bd">
+        <div class="table-container" id="playerStatsTable"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-history" class="view" hidden>
+    <div class="card">
+      <div class="card-hd"><b>Season Progression - Points Earned (All Teams)</b></div>
+      <div class="card-bd">
+        <div class="chartWrap"><canvas id="historyChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+</main>
+
 <script>
+/** * CONFIGURATION
+ */
 const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw8GVO1VqmhHyNhgoVr25lvkROu0D0lrqDA0RQqNQ0e3nxs8ZpJl_uXJe0XIvJjt-H1BQ/exec";
-const API_KEY = "BTC1818";
+const READ_KEY = "BTC1818";
 
 const teams = {
-  1:{ name:"Team Cooper" }, 2:{ name:"Team Enrique" }, 3:{ name:"Team Michael" },
-  4:{ name:"Team Jono" }, 5:{ name:"Team Chung" }, 6:{ name:"Team Vignesh" }, 7:{ name:"Team Chris" }
+  1:{ name:"Team Cooper", players:["Cooper Khalil","Simran Chawla","David Sutton","Chris Maniatakis"] },
+  2:{ name:"Team Enrique", players:["Enrique Lopez","Craig Kitner","Josh Bury","Varun Sridhara"] },
+  3:{ name:"Team Michael", players:["Michael Rominger","David Ng","Cameron Rush","Alan Chumacero"] },
+  4:{ name:"Team Jono", players:["Jonathan Rogers","Rafa Bouzinelos","David Thurmond","Andrew Watson"] },
+  5:{ name:"Team Chung", players:["Chung Tan","Huss Shafai","Tom Maloney","Brett Kurz"] },
+  6:{ name:"Team Vignesh", players:["Vignesh Pakkiam","Eric Castricum","Stephen Saunders","Mark Findlay"] },
+  7:{ name:"Team Chris", players:["Chris Scott","Justin Hermann","Nick Teo","Dishit Devasia"] },
 };
-const rounds = Array.from({length: 14}, (_, i) => ({
-  r: i+1,
-  m: [[1,6],[2,5],[3,4],[7,null], [4,2],[5,1],[6,7],[3,null], [2,7],[3,6],[4,5],[1,null], [5,3],[6,2],[7,1],[4,null], [3,1],[4,7],[5,6],[2,null], [6,4],[7,3],[1,2],[5,null], [7,5],[1,4],[2,3],[6,null]].slice(i*4, (i+1)*4)
-}));
 
-const rs = document.getElementById("roundSelect");
-rounds.forEach(r => { let opt = document.createElement("option"); opt.value = r.r; opt.textContent = `Round ${r.r}`; rs.appendChild(opt); });
+const roundsCount = 14;
+const rounds = Array.from({length: roundsCount}, (_, i) => ({ r: i + 1 }));
 
-rs.onchange = () => {
-  const ms = document.getElementById("matchSelect"); ms.innerHTML = "";
-  rounds.find(x => x.r == rs.value).m.forEach((m, i) => {
-    if (m[1]) { let opt = document.createElement("option"); opt.value = i; opt.textContent = `${teams[m[0]].name} vs ${teams[m[1]].name}`; ms.appendChild(opt); }
-  });
-};
-rs.onchange();
+let RESULTS = {};
+let hChart = null;
 
-document.getElementById("btnUnlock").onclick = () => {
-  if (document.getElementById("gateCode").value === "BTC1818") {
-    document.getElementById("gateArea").hidden = true;
-    document.getElementById("adminArea").hidden = false;
+/**
+ * CORE LOGIC
+ */
+async function init() {
+  try {
+    const res = await fetch(`${SHEETS_WEBAPP_URL}?action=dump&key=${READ_KEY}`);
+    const json = await res.json();
+    RESULTS = json.results || {};
+    renderAll();
+  } catch (e) { 
+    document.getElementById("latestResults").innerHTML = "Error connecting to data source.";
+    console.error(e); 
   }
-};
+}
 
-document.getElementById("btnLoad").onclick = () => {
-  const r = rs.value; const mi = document.getElementById("matchSelect").value;
-  const match = rounds.find(x => x.r == r).m[mi];
-  const tA = match[0], tB = match[1];
-  
-  const pairs = ["12", "34", "13", "24", "14", "23"];
-  document.getElementById("sheetHost").innerHTML = `
-    <div class="card">
-      <h3>${teams[tA].name} vs ${teams[tB].name}</h3>
-      ${pairs.map(p => `<div class="score-grid"><span>Set ${p.split('').join('+')}</span><input type="number" class="sa" data-p="${p}" placeholder="Home"> <input type="number" class="sb" data-p="${p}" placeholder="Away"></div>`).join("")}
-      <button class="btn" id="btnSave" style="margin-top:1rem">Save Scores</button>
-    </div>
-  `;
+function renderAll() {
+  renderLadder();
+  renderPlayers();
+  renderHome();
+}
 
-  document.getElementById("btnSave").onclick = async () => {
-    const pData = {}; let sA = 0, sB = 0;
-    document.querySelectorAll(".sa").forEach((el, i) => {
-      const a = Number(el.value), b = Number(document.querySelectorAll(".sb")[i].value);
-      pData[el.dataset.p] = { a, b }; if (a > b) sA++; else if (b > a) sB++;
+function renderHome() {
+  const latest = Object.entries(RESULTS).sort((a,b) => b[1].ts - a[1].ts).slice(0,5);
+  if (latest.length === 0) {
+    document.getElementById("latestResults").innerHTML = "No results recorded yet.";
+    return;
+  }
+  document.getElementById("latestResults").innerHTML = `
+    <table>
+      <tbody>${latest.map(([id, m]) => `
+        <tr>
+          <td>${teams[m.a].name} vs ${teams[m.b].name}</td>
+          <td class="right"><b>${m.aSets}-${m.bSets}</b></td>
+          <td class="right">${m.aPts}-${m.bPts} pts</td>
+        </tr>`).join("")}
+      </tbody>
+    </table>`;
+}
+
+function renderLadder() {
+  const ladder = Object.keys(teams).map(id => {
+    let t = { id: Number(id), name: teams[id].name, p: 0, pts: 0, sW: 0, sL: 0 };
+    Object.values(RESULTS).forEach(m => {
+      if (m.a == id) { t.p++; t.pts += m.aPts; t.sW += m.aSets; t.sL += m.bSets; }
+      if (m.b == id) { t.p++; t.pts += m.bPts; t.sW += m.bSets; t.sL += m.aSets; }
     });
-    const record = { r: Number(r), a: tA, b: tB, aSets: sA, bSets: sB, aPts: sA + (sA>sB?2:0), bPts: sB + (sB>sA?2:0), pairs: pData, ts: Date.now() };
-    const res = await fetch(`${SHEETS_WEBAPP_URL}?action=upsert&key=${API_KEY}&matchKey=r${r}_m${mi}&record=${encodeURIComponent(JSON.stringify(record))}`);
-    if (res.ok) alert("Saved!");
-  };
-};
+    return t;
+  }).sort((a,b) => b.pts - a.pts || (b.sW - b.sL) - (a.sW - a.sL));
+
+  document.getElementById("kpiLeader").textContent = ladder[0]?.name.split(" ")[1] || "—";
+  document.getElementById("kpiRounds").textContent = new Set(Object.values(RESULTS).map(m => m.r)).size;
+  document.getElementById("kpiMatches").textContent = Object.keys(RESULTS).length;
+
+  document.getElementById("ladderTable").innerHTML = `
+    <table>
+      <thead><tr><th>Team</th><th class="right">P</th><th class="right">Pts</th><th class="right">Sets</th></tr></thead>
+      <tbody>${ladder.map(t => `
+        <tr><td>${t.name}</td><td class="right">${t.p}</td><td class="right"><b>${t.pts}</b></td><td class="right">${t.sW}-${t.sL}</td></tr>
+      `).join("")}</tbody>
+    </table>`;
+}
+
+function renderPlayers() {
+  const pStats = {};
+  Object.keys(teams).forEach(tid => {
+    teams[tid].players.forEach(p => pStats[p] = { name: p, team: teams[tid].name, sW: 0, sP: 0, gW: 0, gP: 0 });
+  });
+
+  Object.values(RESULTS).forEach(m => {
+    if (!m.pairs) return;
+    const tA = teams[m.a], tB = teams[m.b];
+    Object.entries(m.pairs).forEach(([key, val]) => {
+      const pIdx = { "12":[0,1], "34":[2,3], "13":[0,2], "24":[1,3], "14":[0,3], "23":[1,2] }[key];
+      if (!pIdx) return;
+      pIdx.forEach(i => {
+        let pA = pStats[tA.players[i]], pB = pStats[tB.players[i]];
+        if (pA && pB) {
+          pA.sP++; pA.gP += (val.a + val.b); pA.gW += val.a; if (val.a > val.b) pA.sW++;
+          pB.sP++; pB.gB += (val.a + val.b); pB.gW += val.b; if (val.b > val.a) pB.sW++;
+        }
+      });
+    });
+  });
+
+  const sorted = Object.values(pStats).filter(p => p.sP > 0).sort((a,b) => b.sW - a.sW || b.gW - a.gW);
+  if (sorted.length > 0) document.getElementById("kpiMVP").textContent = sorted[0].name.split(" ")[0];
+
+  document.getElementById("playerStatsTable").innerHTML = `
+    <table>
+      <thead>
+        <tr><th>Player</th><th>Team</th><th class="right">Sets W</th><th class="right">Games W</th><th class="right">Win %</th></tr>
+      </thead>
+      <tbody>${sorted.map(p => `
+        <tr><td><b>${p.name}</b></td><td>${p.team}</td><td class="right">${p.sW}/${p.sP}</td><td class="right">${p.gW}</td><td class="right">${Math.round((p.sW/p.sP)*100)}%</td></tr>
+      `).join("")}</tbody>
+    </table>`;
+}
+
+function renderHistory() {
+  const ctx = document.getElementById("historyChart");
+  const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#64748b'];
+  
+  const datasets = Object.keys(teams).map((tid, i) => {
+    let cumulative = 0;
+    const data = rounds.map(r => {
+      const match = Object.values(RESULTS).find(m => m.r == r.r && (m.a == tid || m.b == tid));
+      if (match) cumulative += (match.a == tid ? match.aPts : match.bPts);
+      return cumulative;
+    });
+    return { label: teams[tid].name, data, borderColor: colors[i], backgroundColor: colors[i], tension: 0.3, fill: false };
+  });
+
+  if (hChart) hChart.destroy();
+  hChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: rounds.map(r => `R${r.r}`), datasets },
+    options: { 
+      responsive: true, 
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom' } },
+      scales: { y: { beginAtZero: true, title: { display: true, text: 'Cumulative Points' } } } 
+    }
+  });
+}
+
+/**
+ * NAVIGATION
+ */
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+  document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", "false"));
+  t.setAttribute("aria-selected", "true");
+  document.querySelectorAll(".view").forEach(v => v.hidden = true);
+  const target = document.getElementById(`view-${t.dataset.view}`);
+  if (target) target.hidden = false;
+  if (t.dataset.view === 'history') renderHistory();
+});
+
+init();
 </script>
 </body>
 </html>
